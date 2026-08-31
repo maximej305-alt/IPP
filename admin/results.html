@@ -5,91 +5,656 @@
 </head>
 <body class="admin-body">
 <div class="admin-layout">
-  <aside class="admin-sidebar" data-admin-sidebar><div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div></div></div>
-  <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a><a class="admin-nav__link" data-admin-nav="documents" href="documents.html">⬙ Documents</a><a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html">◎ Galerie</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a></nav>
-  <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
+  <aside class="admin-sidebar" data-admin-sidebar>
+    <div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div><div class="admin-sidebar__sub">Résultats</div></div></div>
+    <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a><a class="admin-nav__link" data-admin-nav="documents" href="documents.html">⬙ Documents</a><a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html">◎ Galerie</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a></nav>
+    <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div>
+  </aside>
   <div class="admin-main">
-    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Gestion des résultats</div></div><span class="badge badge--programmed">Mock actif</span></div>
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Gestion des publications de résultats</div></div><button class="btn btn--primary btn--small" id="btn-create">+ Créer une publication</button></div>
     <div class="admin-content">
-      <div class="card"><div class="card__body">
-        <h3>Importer des résultats</h3>
-        <p class="text-small">Interface préparée pour Excel/PDF. Flux futur : Upload → Analyse → Aperçu → Confirmation → Publication (Supabase Storage + Edge Function).</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px" class="form-row">
-          <div class="form-group"><label class="form-label">Niveau</label><select class="form-select" id="level"><option>Terminale</option><option>Première</option><option>Seconde</option></select></div>
-          <div class="form-group"><label class="form-label">Série</label><select class="form-select" id="serie"><option>F2</option><option>F3</option><option>D</option><option>C</option><option>A4</option></select></div>
-          <div class="form-group"><label class="form-label">Session</label><select class="form-select" id="session"><option>Deuxième trimestre</option><option>Premier trimestre</option><option>Troisième trimestre</option></select></div>
-        </div>
-        <div id="dropzone" class="dropzone" style="margin-top:12px">
-          <div class="dropzone__icon">⬙</div>
-          <div style="font-weight:600;color:var(--ipp-navy)">Glissez votre fichier ici</div>
-          <div class="text-small text-muted">Excel ou PDF — simulation complète côté frontend</div>
-          <input type="file" id="file" hidden accept=".xlsx,.xls,.pdf">
-          <button class="btn btn--secondary btn--small" style="margin-top:12px" id="pick">Choisir un fichier</button>
-          <div id="file-name" style="font-size:12px;color:var(--ipp-text-muted);margin-top:8px"></div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn--secondary btn--small" id="btn-preview">Analyser (simulation)</button><button class="btn btn--primary btn--small" id="btn-publish">Publier</button><button class="btn btn--ghost btn--small" id="btn-schedule">Programmer</button></div>
-      </div></div>
 
-      <div id="preview" hidden class="card" style="margin-top:16px"><div class="card__body">
-        <h3>Aperçu — détection simulée</h3><div id="preview-meta" class="text-small text-muted" style="margin:6px 0 12px"></div>
-        <div class="table-wrap"><table class="table"><thead><tr><th>Nom</th><th>Classe</th><th>Moyenne</th><th>Rang</th><th>Décision</th></tr></thead><tbody id="preview-body"></tbody></table></div>
-        <div class="alert alert--info" style="margin-top:12px">Le frontend peut commencer avec une simulation complète. Plus tard : JS → Supabase Storage / Edge Function → PostgreSQL.</div>
-      </div></div>
+      <!-- Filtre statut -->
+      <div class="form-row" style="max-width:420px;margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label">Filtrer par statut</label>
+          <select class="form-select" id="status-filter">
+            <option value="">Tous</option>
+            <option value="draft">Brouillon</option>
+            <option value="scheduled">Programmé</option>
+            <option value="published">Publié</option>
+            <option value="expired">Expiré</option>
+            <option value="archived">Archivé</option>
+          </select>
+        </div>
+      </div>
 
-      <div class="card" style="margin-top:16px"><div class="card__body"><h3>Programmer l'affichage public</h3><div class="form-row" style="margin-top:12px"><div class="form-group"><label class="form-label">Date de publication</label><input class="form-input" type="datetime-local" id="pub-at"></div><div class="form-group"><label class="form-label">État actuel (test)</label><select class="form-select" id="state"><option value="available">Disponibles</option><option value="scheduled">Programmé (countdown)</option><option value="empty">Aucun programmé</option></select></div></div><button class="btn btn--primary btn--small" id="apply-state">Appliquer</button></div></div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Niveau</th><th>Classe</th><th>Session</th><th>Année</th><th>Élèves</th><th>Statut</th><th>Publication</th><th></th></tr></thead>
+        <tbody id="pub-tbody"></tbody>
+      </table></div>
+
+      <div id="list-empty" class="card" hidden><div class="card__body" style="text-align:center;color:var(--ipp-text-muted)">Aucune publication. Cliquez sur « Créer une publication ».</div></div>
     </div>
   </div>
 </div>
+
+<!-- ============ MODAL CRÉATION ============ -->
+<div id="create-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.4);display:grid;place-items:center;padding:16px;z-index:60">
+  <div class="card" style="width:100%;max-width:520px"><div class="card__body">
+    <h3>Nouvelle publication de résultats</h3>
+    <div id="create-error" hidden class="alert" style="background:#fee2e2;border-color:#fecaca;color:#991b1b;margin:10px 0"></div>
+    <div id="create-duplicate" hidden class="alert" style="background:#fef9c3;border-color:#fde047;color:#854d0e;margin:10px 0"></div>
+    <form id="create-form" style="margin-top:12px">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Niveau *</label><select class="form-select" id="c-level"><option value="">Choisir</option><option>Seconde</option><option>Première</option><option>Terminale</option></select></div>
+        <div class="form-group"><label class="form-label">Classe / Série *</label><input class="form-input" id="c-class" list="cls-list" maxlength="10" required><datalist id="cls-list"><option value="A4"><option value="C"><option value="D"><option value="F2"><option value="F3"></datalist></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Session *</label><select class="form-select" id="c-session"><option value="">Choisir</option><option>Premier trimestre</option><option>Deuxième trimestre</option><option>Troisième trimestre</option><option>Examen blanc</option></select></div>
+        <div class="form-group"><label class="form-label">Année scolaire *</label><input class="form-input" id="c-year" list="yr-list" maxlength="9" required><datalist id="yr-list"><option value="2025-2026"><option value="2026-2027"></datalist></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Expiration (facultatif)</label><input class="form-input" type="datetime-local" id="c-expires"></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button class="btn btn--secondary btn--small" type="button" id="create-cancel">Annuler</button>
+        <button class="btn btn--primary btn--small" type="submit">Créer</button>
+      </div>
+    </form>
+  </div></div>
+</div>
+
+<!-- ============ MODAL GESTION ============ -->
+<div id="manage-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.5);display:grid;place-items:center;padding:16px;z-index:70;overflow:auto">
+  <div class="card" style="width:100%;max-width:880px;max-height:92vh;overflow:auto"><div class="card__body">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div>
+        <h3 style="margin:0" id="m-title">Gestion de la publication</h3>
+        <div class="text-small text-muted" id="m-sub" style="margin-top:4px"></div>
+      </div>
+      <button class="btn btn--ghost btn--small" id="m-close">✕ Fermer</button>
+    </div>
+
+    <div id="m-error" hidden class="alert" style="background:#fee2e2;border-color:#fecaca;color:#991b1b;margin:12px 0"></div>
+    <div id="m-ok" hidden class="alert alert--success" style="margin:12px 0"></div>
+
+    <!-- Informations générales -->
+    <div class="card" style="margin-top:16px;background:var(--ipp-surface,#f8fafc)"><div class="card__body">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px" id="m-infos"></div>
+      <!-- Fichiers associés (multi-fichiers) -->
+      <div class="card" style="margin-top:14px"><div class="card__body">
+        <h4 style="margin:0 0 8px">Fichiers associés</h4>
+        <div id="m-files-list"></div>
+        <div id="m-files-empty" class="text-small text-muted" style="margin-top:4px">Aucun fichier associé.</div>
+      </div></div>
+    </div></div>
+
+    <!-- Actions selon statut -->
+    <div class="form-row" style="margin-top:16px;flex-wrap:wrap;gap:8px;align-items:center" id="m-actions"></div>
+
+    <!-- Aperçu des élèves -->
+    <div class="card" style="margin-top:16px"><div class="card__body">
+      <h4 style="margin:0 0 8px">Élèves indexés</h4>
+      <div class="table-wrap" style="max-height:260px;overflow:auto"><table class="table"><thead><tr><th>Nom</th><th>Moyenne</th><th>Rang</th><th>Décision</th></tr></thead><tbody id="m-students"></tbody></table></div>
+      <div id="m-students-empty" class="text-small text-muted" style="margin-top:8px">Aucun élève indexé pour le moment.</div>
+    </div></div>
+
+    <!-- Import des résultats -->
+    <div class="card" style="margin-top:16px"><div class="card__body">
+      <h4 style="margin:0 0 4px">Importer / Remplacer un fichier de résultats</h4>
+      <p class="text-small text-muted" style="margin-bottom:10px">Excel (.xlsx) analysé avec SheetJS. Un remplacement n'efface l'ancien fichier qu'après validation du nouveau.</p>
+      <div class="form-group"><label class="form-label">Fichier Excel (.xlsx)</label><input class="form-input" type="file" id="m-file" accept=".xlsx,.xls"></div>
+      <div class="form-row" style="margin-top:6px">
+        <div class="form-group"><label class="form-label">Colonne "Nom"</label><select class="form-select" id="map-name"></select></div>
+        <div class="form-group"><label class="form-label">Colonne "Moyenne"</label><select class="form-select" id="map-average"></select></div>
+        <div class="form-group"><label class="form-label">Colonne "Rang"</label><select class="form-select" id="map-rank"></select></div>
+        <div class="form-group"><label class="form-label">Colonne "Décision"</label><select class="form-select" id="map-decision"></select></div>
+      </div>
+      <div id="import-errors" hidden class="alert" style="background:#fee2e2;border-color:#fecaca;color:#991b1b;margin:10px 0"></div>
+      <div class="table-wrap" style="max-height:260px;overflow:auto;margin-top:8px"><table class="table" id="preview-table" hidden><thead><tr><th>#</th><th>Nom</th><th>Moyenne</th><th>Rang</th><th>Décision</th></tr></thead><tbody id="preview-body"></tbody></table></div>
+      <div id="preview-summary" class="text-small" style="margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn--secondary btn--small" id="m-analyze">Analyser le fichier</button>
+        <button class="btn btn--primary btn--small" id="m-import" hidden>Confirmer l'importation</button>
+      </div>
+    </div></div>
+  </div></div>
+</div>
+
+<!-- ============ DIALOGUE DE CONFIRMATION DESTRUCTIVE ============ -->
+<div id="confirm-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.5);display:grid;place-items:center;padding:16px;z-index:90">
+  <div class="card" style="width:100%;max-width:460px"><div class="card__body">
+    <h3 style="margin:0" id="cf-title">Confirmer la suppression</h3>
+    <div class="alert" style="background:#fef2f2;border-color:#fecaca;color:#991b1b;margin:14px 0" id="cf-body"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn--secondary btn--small" id="cf-cancel">Annuler</button>
+      <button class="btn btn--danger btn--small" id="cf-ok">Supprimer définitivement</button>
+    </div>
+  </div></div>
+</div>
+
 <script type="module">
 import {initAdmin} from "../js/admin/adminLayout.js";
 import {resultsService} from "../js/services/resultsService.js";
-import {excelService} from "../js/services/excelService.js";
-initAdmin({active:"results"});
-const dz=document.getElementById("dropzone"), fileEl=document.getElementById("file"), pick=document.getElementById("pick"), fname=document.getElementById("file-name");
-pick.addEventListener("click",()=>fileEl.click());
-fileEl.addEventListener("change",()=>{ if(fileEl.files[0]) fname.textContent=fileEl.files[0].name; });
-["dragover","dragenter"].forEach(ev=> dz.addEventListener(ev,e=>{e.preventDefault(); dz.classList.add("is-dragover");}));
-["dragleave","drop"].forEach(ev=> dz.addEventListener(ev,()=>dz.classList.remove("is-dragover")));
-dz.addEventListener("drop",e=>{e.preventDefault(); if(e.dataTransfer.files[0]){ fileEl.files=e.dataTransfer.files; fname.textContent=e.dataTransfer.files[0].name; }});
+import {resultFileService} from "../js/services/resultFileService.js";
 
-document.getElementById("btn-preview").addEventListener("click", async()=>{
-  const level=document.getElementById("level").value, serie=document.getElementById("serie").value, session=document.getElementById("session").value;
-  const file = fileEl.files[0] || { name:"exemple.xlsx", size: 0 };
+await initAdmin({ active: "results", requiredRole: "admin" });
+
+const STATUS_LABEL = { draft:"Brouillon", scheduled:"Programmé", published:"Publié", expired:"Expiré", archived:"Archivé" };
+const STATUS_BADGE = { draft:"badge--programmed", scheduled:"badge--programmed", published:"badge--active", expired:"badge--expired", archived:"badge--expired" };
+const LIST = { level:"Seconde", class_name:"C", session:"Premier trimestre", school_year:"2025-2026" }; // réservé
+
+const tbody = document.getElementById("pub-tbody");
+const listEmpty = document.getElementById("list-empty");
+const filterEl = document.getElementById("status-filter");
+
+// ---------------------------------------------------------------------------
+// Chargement dynamique de SheetJS
+// ---------------------------------------------------------------------------
+let XLSX = null;
+async function loadXLSX(){
+  if(XLSX) return XLSX;
+  if(window.XLSX){ XLSX = window.XLSX; return XLSX; }
+  const url = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+  await new Promise((resolve, reject)=>{
+    const s = document.createElement("script");
+    s.src = url; s.onload = ()=>{ XLSX = window.XLSX; resolve(); }; s.onerror = ()=>reject(new Error("Impossible de charger SheetJS."));
+    document.head.appendChild(s);
+  });
+  return XLSX;
+}
+
+// ---------------------------------------------------------------------------
+// Liste des publications
+// ---------------------------------------------------------------------------
+let allPubs = [];
+async function render(){
+  allPubs = await resultsService.getAdminPublications();
+  const f = filterEl.value;
+  const list = f ? allPubs.filter(p=>p.status===f) : allPubs;
+  tbody.innerHTML = "";
+  listEmpty.hidden = list.length !== 0;
+  for(const p of list){
+    const tr = document.createElement("tr");
+    const tdLvl = document.createElement("td"); tdLvl.className="table__title"; tdLvl.textContent = p.level || "—";
+    const tdCls = document.createElement("td"); tdCls.textContent = p.className || "—";
+    const tdSes = document.createElement("td"); tdSes.textContent = p.session || "—";
+    const tdYr = document.createElement("td"); tdYr.textContent = p.schoolYear || "—";
+    const tdCnt = document.createElement("td");
+    tdCnt.textContent = p.studentCount != null ? p.studentCount + " élève" + (p.studentCount>1?"s":"") : "—";
+    const tdSt = document.createElement("td");
+    const badge = document.createElement("span"); badge.className = "badge " + (STATUS_BADGE[p.status]||"badge--programmed"); badge.textContent = STATUS_LABEL[p.status] || p.status;
+    tdSt.appendChild(badge);
+    const tdPub = document.createElement("td"); tdPub.style.fontSize="12px"; tdPub.textContent = p.publish_at ? new Date(p.publish_at).toLocaleString("fr-FR") : "—";
+    const tdAct = document.createElement("td");
+    const btn = document.createElement("button"); btn.className="btn btn--ghost btn--small"; btn.textContent="Gérer";
+    btn.addEventListener("click", ()=> openManage(p.id));
+    tdAct.appendChild(btn);
+    tr.append(tdLvl, tdCls, tdSes, tdYr, tdCnt, tdSt, tdPub, tdAct);
+    tbody.appendChild(tr);
+  }
+}
+filterEl.addEventListener("change", render);
+
+// ---------------------------------------------------------------------------
+// CRÉATION + PRÉVENTION DOUBLONS
+// ---------------------------------------------------------------------------
+const createModal = document.getElementById("create-modal");
+const createForm = document.getElementById("create-form");
+const createErr = document.getElementById("create-error");
+const createDup = document.getElementById("create-duplicate");
+document.getElementById("btn-create").addEventListener("click", ()=>{
+  createErr.hidden=true; createDup.hidden=true; createForm.reset(); createModal.hidden=false;
+});
+document.getElementById("create-cancel").addEventListener("click", ()=> createModal.hidden=true);
+createModal.addEventListener("click", e=>{ if(e.target===createModal) createModal.hidden=true; });
+
+createForm.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  createErr.hidden=true; createDup.hidden=true;
+  const level = document.getElementById("c-level").value;
+  const className = document.getElementById("c-class").value.trim().toUpperCase();
+  const session = document.getElementById("c-session").value;
+  const schoolYear = document.getElementById("c-year").value.trim();
+  const expires_at = document.getElementById("c-expires").value || null;
+  if(!level || !className || !session || !schoolYear){ createErr.textContent="Tous les champs obligatoires doivent être remplis."; createErr.hidden=false; return; }
   try{
-    // P9 — passe par la couche d'abstraction Excel (P8-9)
-    const res= await excelService.analyze({ file, level, serie, session });
-    document.getElementById("preview").hidden=false;
-    document.getElementById("preview-meta").textContent=`Fichier : ${res.fileName} — ${res.level} ${res.serie} — ${res.session} — ${res.detected} lignes détectées` + (res.autoDetected ? " (auto-détecté depuis le nom)" : "");
-    // P2 — construction sûre via textContent (pas d'innerHTML avec données élève)
-    const tbody = document.getElementById("preview-body");
-    tbody.innerHTML="";
-    res.preview.forEach(r=>{
-      const tr = document.createElement("tr");
-      const isAdmis = String(r.decision).toUpperCase().includes("ADMIS");
-      tr.style.background = isAdmis ? "#f7fee7" : "#fef2f2";
-      const tdName = document.createElement("td"); tdName.className="table__title"; tdName.style.borderLeft = `3px solid ${isAdmis ? "#84cc16" : "#ef4444"}`; tdName.textContent = r.name;
-      const tdClass = document.createElement("td"); tdClass.textContent = `${r.level} ${r.serie}`;
-      const tdAvg = document.createElement("td"); tdAvg.style.fontWeight="700"; tdAvg.textContent = r.average;
-      const tdRank = document.createElement("td"); tdRank.textContent = `${r.rank}/${r.total}`;
-      const tdDec = document.createElement("td");
-      const badge = document.createElement("span");
-      badge.style.cssText = `display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-weight:800;font-size:11px;letter-spacing:.05em;border:1px solid ${isAdmis ? "#65a30d" : "#dc2626"};box-shadow:0 1px 3px ${isAdmis ? "rgba(132,204,22,.25)" : "rgba(239,68,68,.25)"};background:${isAdmis ? "#84cc16" : "#ef4444"};color:#fff`;
-      badge.textContent = (isAdmis ? "✓ " : "✕ ") + r.decision;
-      tdDec.appendChild(badge);
-      tr.append(tdName, tdClass, tdAvg, tdRank, tdDec);
-      tbody.appendChild(tr);
-    });
+    const pub = await resultsService.createPublication({ level, className, session, schoolYear, status:"draft", expires_at });
+    createModal.hidden=true;
+    await render();
+    openManage(pub.id);
   }catch(err){
-    alert(err.message);
+    if(err.message === "EXISTS" || err.existing){
+      createDup.textContent = err.message + " Vous pouvez modifier la publication existante ou annuler.";
+      createDup.hidden=false;
+    }else{
+      createErr.textContent = err.message; createErr.hidden=false;
+    }
   }
 });
-document.getElementById("btn-publish").addEventListener("click",()=>{ resultsService.setState("available"); alert("Résultats publiés (mock) — visibles sur la page Résultats publique.");});
-document.getElementById("btn-schedule").addEventListener("click",()=>{ const v=document.getElementById("pub-at").value; if(v) resultsService.setScheduledAt(new Date(v)); resultsService.setState("scheduled"); alert("Publication programmée (mock) — countdown actif.");});
-document.getElementById("apply-state").addEventListener("click",()=>{
-  const s=document.getElementById("state").value; resultsService.setState(s);
-  const v=document.getElementById("pub-at").value; if(v) resultsService.setScheduledAt(new Date(v));
-  alert("État appliqué : "+s);
+
+// ---------------------------------------------------------------------------
+// GESTION
+// ---------------------------------------------------------------------------
+const manageModal = document.getElementById("manage-modal");
+const mTitle = document.getElementById("m-title");
+const mSub = document.getElementById("m-sub");
+const mErr = document.getElementById("m-error");
+const mOk = document.getElementById("m-ok");
+const mInfos = document.getElementById("m-infos");
+  const mFileInfo = document.getElementById("m-files-list");
+  const mFilesEmpty = document.getElementById("m-files-empty");
+const mActions = document.getElementById("m-actions");
+const mStudents = document.getElementById("m-students");
+const mStudentsEmpty = document.getElementById("m-students-empty");
+let currentPub = null;
+let pendingImport = null; // { students, isReplace }
+
+document.getElementById("m-close").addEventListener("click", ()=> manageModal.hidden=true);
+manageModal.addEventListener("click", e=>{ if(e.target===manageModal) manageModal.hidden=true; });
+
+function fmtDate(v){ return v ? new Date(v).toLocaleString("fr-FR") : "—"; }
+
+async function setStatus(updateFn){
+  try{
+    mErr.hidden=true; mOk.hidden=true;
+    currentPub = await updateFn(currentPub.id);
+    await showManage();
+  }catch(err){ mErr.textContent = err.message; mErr.hidden=false; }
+}
+
+async function openManage(id){
+  currentPub = null; pendingImport = null; resetImportUI();
+  mErr.hidden=true; mOk.hidden=true;
+  manageModal.hidden=false;
+  await showManage();
+  manageModal.dataset.pub = id;
+}
+
+async function showManage(){
+  const id = manageModal.dataset.pub;
+  currentPub = await resultsService.getPublicationById(id);
+  if(!currentPub){ mErr.textContent="Publication introuvable."; mErr.hidden=false; return; }
+
+  mTitle.textContent = `${currentPub.level || "—"} — ${currentPub.className || "—"}`;
+  mSub.textContent = `Session : ${currentPub.session||"—"} · Année : ${currentPub.schoolYear||"—"} · Statut : ${STATUS_LABEL[currentPub.status]||currentPub.status}`;
+
+  mInfos.innerHTML = "";
+  const infoRows = [
+    ["Niveau", currentPub.level], ["Classe", currentPub.className], ["Session", currentPub.session], ["Année", currentPub.schoolYear],
+    ["Statut", STATUS_LABEL[currentPub.status]||currentPub.status], ["Publication", fmtDate(currentPub.publish_at)],
+    ["Publiée le", fmtDate(currentPub.published_at)], ["Expiration", fmtDate(currentPub.expires_at)],
+    ["Élèves", currentPub.studentCount != null ? currentPub.studentCount : "—"]
+  ];
+  infoRows.forEach(([k,v])=>{
+    const d = document.createElement("div");
+    const l = document.createElement("div"); l.className="text-small text-muted"; l.textContent=k;
+    const val = document.createElement("div"); val.style.fontWeight="600"; val.textContent = v || "—";
+    d.append(l, val); mInfos.appendChild(d);
+  });
+
+  await renderFiles(id);
+  buildActions();
+  await renderStudents(id);
+}
+
+// ---------------------------------------------------------------------------
+// FICHIERS — liste multi-fichiers + remplacement ciblé + suppression individuelle
+// Toutes les données dynamiques via textContent (XSS-safe : noms de fichiers).
+// ---------------------------------------------------------------------------
+async function renderFiles(id){
+  mFilesEmpty.hidden = false;
+  mFileInfo.innerHTML = "";
+  let files = [];
+  try{ files = await resultsService.getPublicationFiles(id); }catch(_){ files = []; }
+  if(files.length === 0){ mFilesEmpty.hidden = false; return; }
+  mFilesEmpty.hidden = true;
+
+  const hiddenInput = document.createElement("input");
+  hiddenInput.type = "file";
+  hiddenInput.accept = ".xlsx,.pdf";
+  hiddenInput.style.display = "none";
+  hiddenInput.addEventListener("change", async ()=>{
+    const f = hiddenInput.files[0];
+    if(!f) return;
+    const targetId = hiddenInput.dataset.fileId;
+    const btn = hiddenInput.dataset.btn;
+    try{
+      setErrs(null); mOk.hidden = true;
+      const v = await resultFileService.validateFile(f);
+      if(!v.ok){ setErrs(v.error); hiddenInput.value = ""; return; }
+      if(btn === "replaceFileOnly"){
+        const res = await resultsService.replaceFileOnly(id, targetId, f);
+        await renderFiles(id);
+        showCleanupWarning(res && res.cleanupWarning);
+        flashOk("Fichier remplacé avec succès.");
+      }
+      hiddenInput.value = "";
+    }catch(err){
+      hiddenInput.value = "";
+      if(err.cleanupWarning) showCleanupWarning(err.cleanupWarning);
+      setErrs(err.message || "Échec de l'opération sur le fichier.");
+    }
+  });
+
+  files.forEach(fi=>{
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.06)";
+
+    const info = document.createElement("div");
+    info.style.cssText = "flex:1;min-width:0";
+    const name = document.createElement("div");
+    name.style.cssText = "font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
+    name.textContent = fi.fileName || "fichier"; // XSS-safe
+    const meta = document.createElement("div");
+    meta.className = "text-small text-muted";
+    const ext = (fi.fileName || "").split(".").pop().toUpperCase();
+    const sz = fi.fileSize ? (fi.fileSize/1024/1024).toFixed(2) + " Mo" : "";
+    meta.textContent = [ext, sz, "modifié " + fmtDate(fi.createdAt)].filter(Boolean).join(" · ");
+    info.append(name, meta);
+
+    const btnRep = document.createElement("button");
+    btnRep.className = "btn btn--secondary btn--small";
+    btnRep.textContent = "Remplacer";
+    btnRep.addEventListener("click", ()=>{
+      hiddenInput.dataset.fileId = fi.id;
+      hiddenInput.dataset.btn = "replaceFileOnly";
+      hiddenInput.click();
+    });
+
+    const btnDel = document.createElement("button");
+    btnDel.className = "btn btn--danger btn--small";
+    btnDel.textContent = "Supprimer";
+    btnDel.addEventListener("click", ()=> confirmDeleteFile(fi));
+
+    row.append(info, btnRep, btnDel);
+    mFileInfo.appendChild(row);
+  });
+  document.body.appendChild(hiddenInput);
+}
+
+function confirmDeleteFile(file){
+  if(!file) return;
+  cfModal.hidden = false;
+  cfBody.innerHTML = "";
+  const p1 = document.createElement("p"); p1.style.margin="0 0 8px"; p1.textContent = "Supprimer ce fichier du stockage ?";
+  const ul = document.createElement("ul"); ul.style.margin="0 0 8px"; ul.style.paddingLeft="18px";
+  const li = document.createElement("li"); li.textContent = "Cette action supprimera définitivement le fichier et son enregistrement associé (résultats conservés).";
+  ul.appendChild(li);
+  const p2 = document.createElement("p"); p2.style.margin="0"; p2.style.fontWeight="700"; p2.textContent = "Cette action est irréversible.";
+  cfBody.append(p1, ul, p2);
+  document.getElementById("cf-ok").onclick = async ()=>{
+    cfModal.hidden = true;
+    try{
+      const res = await resultsService.deleteResultFile(file.id);
+      if(res && res.cleanupWarning) showCleanupWarning(res.cleanupWarning);
+      await renderFiles(currentPub.id);
+      flashOk("Fichier supprimé.");
+    }catch(err){
+      if(err.cleanupWarning) showCleanupWarning(err.cleanupWarning);
+      mErr.textContent = err.message || "Échec de la suppression du fichier.";
+      mErr.hidden = false;
+    }
+  };
+}
+
+function showCleanupWarning(w){
+  if(!w) return;
+  mErr.hidden = false;
+  mErr.textContent = "Avertissement nettoyage : " + (w.reason || "ressource orpheline à vérifier") + (w.filePath ? " ("+w.filePath+")" : "");
+}
+
+function flashOk(msg){ mOk.textContent = msg; mOk.hidden=false; }
+
+function buildActions(){
+  const st = currentPub.status;
+  mActions.innerHTML = "";
+  const add = (label, kind, fn, danger)=>{
+    const b = document.createElement("button");
+    b.className = "btn btn--" + (danger ? "danger" : kind) + " btn--small";
+    b.textContent = label;
+    b.addEventListener("click", fn);
+    mActions.appendChild(b);
+  };
+
+  const flash = (msg)=>{ mOk.textContent=msg; mOk.hidden=false; };
+
+  if(st === "draft"){
+    add("Modifier", "secondary", ()=> { mErr.textContent="La modification des métadonnées se fait via le formulaire de création (recréez en brouillon si nécessaire)."; mErr.hidden=false; });
+    add("Publier maintenant", "primary", async ()=>{ try{ await setStatus(id=>resultsService.publishPublication(id)); flash("Publication mise en ligne."); }catch(e){ mErr.textContent=e.message; mErr.hidden=false; } });
+    add("Programmer", "secondary", ()=> promptSchedule());
+    add("Supprimer", "danger", ()=> confirmDelete(), true);
+  }
+  else if(st === "scheduled"){
+    add("Publier maintenant", "primary", async ()=>{ try{ await setStatus(id=>resultsService.publishPublication(id)); flash("Publication mise en ligne."); }catch(e){ mErr.textContent=e.message; mErr.hidden=false; } });
+    add("Annuler la programmation", "secondary", async ()=>{ await setStatus(id=>resultsService.cancelSchedule(id)); flash("Programmation annulée, retour en brouillon."); });
+    add("Supprimer", "danger", ()=> confirmDelete(), true);
+  }
+  else if(st === "published"){
+    add("Retirer de la publication", "secondary", async ()=>{ await setStatus(id=>resultsService.unpublishPublication(id)); flash("Retiré de la publication, retour en brouillon."); });
+    add("Archiver", "secondary", async ()=>{ await setStatus(id=>resultsService.archivePublication(id)); flash("Publication archivée."); });
+    add("Voir", "secondary", ()=> {});
+  }
+  else if(st === "archived"){
+    add("Restaurer en brouillon", "secondary", async ()=>{ await setStatus(id=>resultsService.restorePublication(id)); flash("Publication restaurée en brouillon."); });
+    add("Supprimer définitivement", "danger", ()=> confirmDelete(), true);
+  }
+  else if(st === "expired"){
+    add("Restaurer en brouillon", "secondary", async ()=>{ await setStatus(id=>resultsService.restorePublication(id)); flash("Publication restaurée en brouillon."); });
+    add("Supprimer définitivement", "danger", ()=> confirmDelete(), true);
+  }
+}
+
+function promptSchedule(){
+  const dt = window.prompt("Date et heure de publication (YYYY-MM-DDTHH:mm) :", "");
+  if(!dt) return;
+  setStatus(id=>resultsService.schedulePublication(id, new Date(dt)));
+  mOk.hidden=true;
+}
+
+async function renderStudents(id){
+  mStudents.innerHTML = "";
+  const list = await resultsService.getPublicationStudents(id, 100);
+  mStudentsEmpty.hidden = list.length !== 0;
+  list.forEach(s=>{
+    const tr = document.createElement("tr");
+    const td1=document.createElement("td"); td1.className="table__title"; td1.textContent=s.student_name;
+    const td2=document.createElement("td"); td2.textContent=s.average != null ? s.average : "—";
+    const td3=document.createElement("td"); td3.textContent=s.rank != null ? s.rank : "—";
+    const td4=document.createElement("td"); td4.textContent=s.decision || "—";
+    tr.append(td1,td2,td3,td4);
+    mStudents.appendChild(tr);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// CONFIRMATION DESTRUCTIVE (Phase F)
+// ---------------------------------------------------------------------------
+const cfModal = document.getElementById("confirm-modal");
+const cfBody = document.getElementById("cf-body");
+document.getElementById("cf-cancel").addEventListener("click", ()=> cfModal.hidden=true);
+cfModal.addEventListener("click", e=>{ if(e.target===cfModal) cfModal.hidden=true; });
+
+function confirmDelete(){
+  if(!currentPub) return;
+  cfModal.hidden = false;
+  cfBody.innerHTML = "";
+  const p1 = document.createElement("p"); p1.style.margin="0 0 8px"; p1.textContent = "Cette action supprimera :";
+  const ul = document.createElement("ul"); ul.style.margin="0 0 8px"; ul.style.paddingLeft="18px";
+  ["la publication", "les données indexées des élèves", "le fichier Excel/PDF associé (Storage)"].forEach(t=>{ const li=document.createElement("li"); li.textContent=t; ul.appendChild(li); });
+  const p2 = document.createElement("p"); p2.style.margin="0"; p2.style.fontWeight="700"; p2.textContent = "Cette action est irréversible.";
+  cfBody.append(p1, ul, p2);
+  document.getElementById("cf-ok").onclick = async ()=>{
+    cfModal.hidden = true;
+    try{
+      const res = await resultsService.deletePublication(currentPub.id);
+      if(res && res.cleanupWarning) showCleanupWarning(res.cleanupWarning);
+      manageModal.hidden=true;
+      await render();
+    }catch(err){
+      if(err.cleanupWarning) showCleanupWarning(err.cleanupWarning);
+      mErr.textContent = err.message; mErr.hidden=false;
+    }
+  };
+}
+
+// ---------------------------------------------------------------------------
+// IMPORT / REMPLACEMENT (SheetJS)
+// ---------------------------------------------------------------------------
+const mapName = document.getElementById("map-name");
+const mapAvg = document.getElementById("map-average");
+const mapRank = document.getElementById("map-rank");
+const mapDec = document.getElementById("map-decision");
+const mFile = document.getElementById("m-file");
+const importErrors = document.getElementById("import-errors");
+const previewTable = document.getElementById("preview-table");
+const previewBody = document.getElementById("preview-body");
+const previewSummary = document.getElementById("preview-summary");
+const mAnalyze = document.getElementById("m-analyze");
+const mImport = document.getElementById("m-import");
+
+function resetImportUI(){
+  pendingImport = null;
+  mImport.hidden = true;
+  previewTable.hidden = true;
+  previewBody.innerHTML = "";
+  previewSummary.textContent = "";
+  importErrors.hidden = true;
+  mapName.innerHTML = mapAvg.innerHTML = mapRank.innerHTML = mapDec.innerHTML = "";
+  mFile.value = "";
+}
+
+function setErrs(msg){
+  if(msg){ importErrors.textContent = msg; importErrors.hidden=false; }
+  else importErrors.hidden=true;
+}
+
+const AUTO = {
+  name: /nom|élève|eleve|etudiant|student|name/i,
+  average: /moyenne|moy|average|note/i,
+  rank: /rang|rang|classement|position|rank/i,
+  decision: /decision|décision|resultat|résultat|statut|status/i
+};
+
+function detectColumn(headers){
+  const res = { name:null, average:null, rank:null, decision:null };
+  headers.forEach((h,i)=>{
+    const s = String(h||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    if(res.name===null && AUTO.name.test(s)) res.name = i;
+    else if(res.average===null && AUTO.average.test(s)) res.average = i;
+    else if(res.rank===null && AUTO.rank.test(s)) res.rank = i;
+    else if(res.decision===null && AUTO.decision.test(s)) res.decision = i;
+  });
+  return res;
+}
+
+mAnalyze.addEventListener("click", async ()=>{
+  setErrs(null); previewTable.hidden=true; previewBody.innerHTML=""; mImport.hidden=true;
+  const file = mFile.files[0];
+  if(!file){ setErrs("Sélectionnez un fichier Excel (.xlsx)."); return; }
+  const v = resultsService.validateFile(file);
+  if(!v.ok){ setErrs(v.error); return; }
+  if(!file.name.toLowerCase().endsWith(".xlsx")){ setErrs("L'analyse automatique ne prend en charge que les fichiers .xlsx."); return; }
+  try{
+    await loadXLSX();
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:"array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
+    if(rows.length < 2){ setErrs("Le fichier ne contient pas assez de lignes (en-tête + données)."); return; }
+
+    const headers = rows[0].map(String);
+    const det = detectColumn(headers);
+
+    // Remplit les selects de mapping
+    const fill = (sel, val)=>{
+      sel.innerHTML = "";
+      headers.forEach((h,i)=>{
+        const o = document.createElement("option"); o.value = i; o.textContent = (h||"Colonne "+(i+1)); o.selected = (i===val); sel.appendChild(o);
+      });
+    };
+    fill(mapName, det.name); fill(mapAvg, det.average); fill(mapRank, det.rank); fill(mapDec, det.decision);
+
+    const nameCol = mapName.value !== "" ? Number(mapName.value) : det.name;
+    if(nameCol == null){ setErrs("Impossible de détecter la colonne « Nom ». Sélectionnez-la manuellement."); return; }
+
+    // Validation des données
+    const students = [];
+    const errors = [];
+    for(let i=1;i<rows.length;i++){
+      const r = rows[i];
+      const rowNum = i+1;
+      const cell = idx => (r[idx] != null && r[idx] !== "") ? String(r[idx]).trim() : "";
+      const name = nameCol != null ? cell(nameCol) : "";
+      if(!name){
+        if(cell(0)!=="" || r.some(c=>String(c).trim()!=="")) errors.push(`Ligne ${rowNum} : nom manquant.`);
+        continue;
+      }
+      const avgRaw = mapAvg.value!==""?cell(Number(mapAvg.value)):cell(det.average);
+      const rankRaw = mapRank.value!==""?cell(Number(mapRank.value)):cell(det.rank);
+      const decRaw = mapDec.value!==""?cell(Number(mapDec.value)):cell(det.decision);
+      let average = null, rank = null, decision = decRaw;
+      const avgNum = parseFloat(String(avgRaw).replace(",", "."));
+      if(avgRaw && isNaN(avgNum)) errors.push(`Ligne ${rowNum} : moyenne invalide (« ${avgRaw} »).`);
+      else average = avgRaw ? avgNum : null;
+      const rankNum = rankRaw ? parseInt(String(rankRaw).replace(/\D/g,""),10) : NaN;
+      if(rankRaw && isNaN(rankNum)) errors.push(`Ligne ${rowNum} : rang invalide (« ${rankRaw} »).`);
+      else rank = rankRaw ? rankNum : null;
+      students.push({ name, average, rank, decision });
+    }
+
+    // Aperçu réel via textContent (XSS-safe)
+    previewBody.innerHTML = "";
+    students.slice(0, 200).forEach((s,i)=>{
+      const tr = document.createElement("tr");
+      const td0=document.createElement("td"); td0.textContent=(i+1);
+      const td1=document.createElement("td"); td1.textContent=s.name;
+      const td2=document.createElement("td"); td2.textContent=s.average != null ? s.average : "—";
+      const td3=document.createElement("td"); td3.textContent=s.rank != null ? s.rank : "—";
+      const td4=document.createElement("td"); td4.textContent=s.decision || "—";
+      tr.append(td0,td1,td2,td3,td4);
+      previewBody.appendChild(tr);
+    });
+    previewTable.hidden = false;
+
+    if(errors.length){
+      setErrs(`${errors.length} erreur(s) détectée(s) :\n\n` + errors.slice(0,30).join("\n") + (errors.length>30?`\n… (+${errors.length-30})`:""));
+      mImport.hidden = true;
+      return;
+    }
+    if(students.length === 0){ setErrs("Aucune ligne d'élève valide détectée."); mImport.hidden=true; return; }
+    pendingImport = { students };
+    const hasIndex = (currentPub.studentCount||0) > 0;
+    previewSummary.textContent = `${students.length} élève(s) valide(s) détecté(s). Cliquez sur « Confirmer l'importation » pour ${hasIndex?"remplacer":"enregistrer"}.`;
+    mImport.hidden = false;
+    mImport.textContent = hasIndex ? "Confirmer le remplacement" : "Confirmer l'importation";
+  }catch(err){ setErrs(err.message); }
 });
+
+mImport.addEventListener("click", async ()=>{
+  if(!pendingImport) return;
+  const file = mFile.files[0] || null;
+  const hasIndex = (currentPub.studentCount||0) > 0;
+  const id = currentPub.id;
+  const btn = mImport; btn.disabled = true; const prev = btn.textContent; btn.textContent = "Importation...";
+  setErrs(null); mOk.hidden=true;
+  try{
+    let res;
+    if(hasIndex){
+      res = await resultsService.replacePublicationFile(id, { file, students: pendingImport.students });
+    }else{
+      res = await resultsService.importStudents(id, { file, students: pendingImport.students });
+    }
+    pendingImport = null; resetImportUI();
+    const msg = hasIndex ? "Fichier et résultats remplacés avec succès." : `Importation réussie : ${res.importedCount} élève(s) indexé(s).`;
+    mOk.textContent = msg; mOk.hidden=false;
+    await showManage();
+  }catch(err){ setErrs(err.message); }
+  finally{ btn.disabled=false; btn.textContent = prev; }
+});
+
+await render();
 </script>
 </body>
 </html>

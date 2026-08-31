@@ -1,0 +1,11 @@
+{
+  "name": "ipp-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:lifecycle": "node results-file-lifecycle.spec.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2"
+  }
+}
