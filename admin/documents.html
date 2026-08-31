@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Documents — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/admin.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <aside class="admin-sidebar" data-admin-sidebar><div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div></div></div>
+  <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="documents" href="documents.html">⬙ Documents</a><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html">◎ Galerie</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a></nav>
+  <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
+  <div class="admin-main">
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Documents</div></div><button class="btn btn--primary btn--small" data-open-modal>Créer un document</button></div>
+    <div class="admin-content">
+      <div class="table-wrap"><table class="table"><thead><tr><th>Titre</th><th>Fichier</th><th>Taille</th><th>Statut</th><th>Expiration</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div>
+
+      <div id="doc-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.4);display:grid;place-items:center;padding:16px;z-index:60">
+        <div class="card" style="width:100%;max-width:560px"><div class="card__body">
+          <h3>Nouveau document</h3>
+          <form id="doc-form" style="margin-top:12px">
+            <div class="form-group"><label class="form-label">Titre *</label><input class="form-input" name="title" required maxlength="200"></div>
+            <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" name="description" rows="2"></textarea></div>
+            <div class="form-group"><label class="form-label">Fichier PDF *</label><input class="form-input" type="file" name="file" accept="application/pdf" required><div class="form-hint">PDF uniquement, 8 Mo max</div></div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Statut</label><select class="form-select" name="status"><option value="published">Publié</option><option value="draft">Brouillon</option></select></div><div class="form-group"><label class="form-label">Expiration (facultatif)</label><input class="form-input" type="date" name="expires_at"></div></div>
+            <div id="form-error" hidden class="alert" style="background:#fee2e2;border-color:#fecaca;color:#991b1b;margin-bottom:10px"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn--secondary btn--small" type="button" data-close>Annuler</button><button class="btn btn--primary btn--small" type="submit" id="submit-btn">Créer</button></div>
+          </form>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import {initAdmin} from "../js/admin/adminLayout.js";
+import {documentService} from "../js/services/documentService.js";
+await initAdmin({active:"documents", requiredRole:"editor"});
+const tbody=document.getElementById("tbody");
+const modal=document.getElementById("doc-modal");
+const form=document.getElementById("doc-form");
+const errorEl=document.getElementById("form-error");
+const submitBtn=document.getElementById("submit-btn");
+
+async function render(){
+  const list=await documentService.getAdminDocuments();
+  tbody.innerHTML="";
+  if(list.length===0){
+    const tr=document.createElement("tr"); const td=document.createElement("td"); td.colSpan=6; td.textContent="Aucun document"; td.style.cssText="text-align:center;color:var(--ipp-text-muted);padding:20px"; tr.appendChild(td); tbody.appendChild(tr); return;
+  }
+  list.forEach(d=>{
+    const tr=document.createElement("tr");
+    const tdTitle=document.createElement("td"); tdTitle.className="table__title"; tdTitle.textContent=d.title;
+    const tdFile=document.createElement("td"); tdFile.textContent=d.file_name || "—"; tdFile.style.fontSize="12px";
+    const tdSize=document.createElement("td"); tdSize.textContent=d.size || (d.file_size? (d.file_size/1024/1024).toFixed(1)+" Mo":"—");
+    const tdStatus=document.createElement("td");
+    const badge=document.createElement("span"); badge.className="badge " + (d.status==="published"?"badge--active":d.status==="draft"?"badge--programmed":"badge--expired"); badge.textContent=d.status;
+    tdStatus.appendChild(badge);
+    const tdExp=document.createElement("td"); tdExp.textContent=d.expires_at ? d.expires_at.slice(0,10) : "—";
+    const tdAct=document.createElement("td");
+    const del=document.createElement("button"); del.className="btn btn--ghost btn--small"; del.textContent="Supprimer";
+    del.addEventListener("click", async()=>{ if(confirm("Supprimer ce document ?")){ try{ await documentService.deleteDocument(d.id); await render(); }catch(e){ alert(e.message)} }});
+    tdAct.appendChild(del);
+    tr.append(tdTitle, tdFile, tdSize, tdStatus, tdExp, tdAct);
+    tbody.appendChild(tr);
+  });
+}
+await render();
+
+document.querySelector("[data-open-modal]").addEventListener("click", ()=>{ modal.hidden=false; errorEl.hidden=true; });
+document.querySelector("[data-close]").addEventListener("click", ()=>{ modal.hidden=true; });
+modal.addEventListener("click", e=>{ if(e.target===modal) modal.hidden=true; });
+
+form.addEventListener("submit", async e=>{
+  e.preventDefault();
+  errorEl.hidden=true;
+  const fd=new FormData(form);
+  const file=fd.get("file");
+  const payload={
+    title: (fd.get("title")||"").toString().trim(),
+    description: (fd.get("description")||"").toString().trim(),
+    file: file && file.size>0 ? file : null,
+    status: fd.get("status")||"published",
+    expires_at: fd.get("expires_at")||null
+  };
+  if(!payload.title){ errorEl.textContent="Titre obligatoire"; errorEl.hidden=false; return; }
+  if(!payload.file){ errorEl.textContent="Fichier PDF obligatoire"; errorEl.hidden=false; return; }
+  submitBtn.disabled=true; submitBtn.textContent="Téléversement...";
+  try{
+    await documentService.createDocument(payload);
+    modal.hidden=true; form.reset(); await render();
+  }catch(err){
+    errorEl.textContent=err.message; errorEl.hidden=false; console.error(err);
+  }finally{ submitBtn.disabled=false; submitBtn.textContent="Créer"; }
+});
+</script>
+</body>
+</html>

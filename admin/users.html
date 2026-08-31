@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Utilisateurs — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/admin.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <aside class="admin-sidebar" data-admin-sidebar><div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div></div></div>
+  <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a></nav>
+  <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
+  <div class="admin-main">
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Utilisateurs & rôles</div></div></div>
+    <div class="admin-content">
+      <div class="alert alert--info">Les permissions finales seront imposées côté Supabase avec RLS, non simplement cachées dans l'interface.</div>
+      <div class="table-wrap" style="margin-top:16px"><table class="table"><thead><tr><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Accès</th></tr></thead><tbody>
+        <tr><td class="table__title">Super Admin</td><td>admin@ipp.tg</td><td><span class="badge badge--active">super_admin</span></td><td>Tous les accès</td></tr>
+        <tr><td class="table__title">Administrateur</td><td>admin01@ipp.tg</td><td><span class="badge">admin</span></td><td>Gestion générale</td></tr>
+        <tr><td class="table__title">Éditeur</td><td>editeur@ipp.tg</td><td><span class="badge">editor</span></td><td>Publications, événements, documents, galerie (pas gestion comptes / paramètres critiques)</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+</div>
+<script type="module">import {initAdmin} from "../js/admin/adminLayout.js"; initAdmin({active:"users"});</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Galerie — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/public.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+<header class="site-header"><div class="container site-header__inner">
+  <a class="brand" href="index.html"><div class="brand__mark">IPP</div><div class="brand__text"><div class="brand__name">Institut Polytechnique LA PAIX</div><div class="brand__sub">Galerie</div></div></a>
+  <nav class="nav"><a class="nav__link" href="gallery.html">Galerie</a><a class="nav__link" href="news.html">Actualités</a></nav>
+  <button class="nav-toggle" data-nav-toggle><span></span></button>
+</div><nav class="mobile-nav" data-mobile-nav><a class="mobile-nav__link" href="gallery.html">Galerie</a></nav></header>
+<main>
+  <section class="section" style="padding-bottom:16px"><div class="container"><div class="kicker">Photos</div><h1>Galerie</h1><p>Les photos importantes sont conservées plus longtemps. Images optimisées pour économiser le stockage.</p></div></section>
+  <section class="section section--alt"><div class="container" id="gallery-root"></div></section>
+</main>
+<footer class="site-footer"><div class="container"><div class="footer-bottom"><span>© 2026 IPP</span></div></div></footer>
+<script type="module">
+import {initPublicLayout} from "../js/shared/layout.js";
+import {galleryService} from "../js/services/galleryService.js";
+initPublicLayout();
+const grouped = await galleryService.grouped();
+const root = document.getElementById("gallery-root");
+const albumImgs = {"Semaine technique":"../assets/images/atelier-technique.jpg","Activités sportives":"../assets/images/hero-students.jpg","Journée culturelle":"../assets/images/graduation.jpg"};
+// P2 — textContent pour album/count/year
+Object.entries(grouped).forEach(([year, albums])=>{
+  const h3 = document.createElement("h3"); h3.style.margin="24px 0 12px"; h3.textContent = year; root.appendChild(h3);
+  const grid = document.createElement("div"); grid.className="gallery-grid";
+  albums.forEach(a=>{
+    const card = document.createElement("div"); card.className="card"; card.style.overflow="hidden";
+    const imgWrap = document.createElement("div"); imgWrap.style.cssText="height:180px;overflow:hidden";
+    const img = document.createElement("img"); img.src = albumImgs[a.album]||'../assets/images/campus.jpg'; img.alt = a.album; img.style.cssText="width:100%;height:100%;object-fit:cover"; img.loading="lazy";
+    imgWrap.appendChild(img);
+    const body = document.createElement("div"); body.className="card__body";
+    const title = document.createElement("div"); title.className="card__title"; title.textContent = a.album;
+    const meta = document.createElement("div"); meta.className="card__meta";
+    const span = document.createElement("span"); span.textContent = a.count + " photos";
+    meta.appendChild(span); body.append(title, meta); card.append(imgWrap, body); grid.appendChild(card);
+  });
+  root.appendChild(grid);
+});
+</script>
+</body>
+</html>

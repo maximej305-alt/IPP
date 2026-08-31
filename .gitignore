@@ -1,0 +1,12 @@
+# Secrets & env
+.env
+.env.local
+supabase/.temp/
+supabase/.branches/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Deps
+node_modules/

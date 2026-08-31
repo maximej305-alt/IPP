@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Résultats — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/admin.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <aside class="admin-sidebar" data-admin-sidebar><div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div></div></div>
+  <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a><a class="admin-nav__link" data-admin-nav="documents" href="documents.html">⬙ Documents</a><a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html">◎ Galerie</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a></nav>
+  <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
+  <div class="admin-main">
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Gestion des résultats</div></div><span class="badge badge--programmed">Mock actif</span></div>
+    <div class="admin-content">
+      <div class="card"><div class="card__body">
+        <h3>Importer des résultats</h3>
+        <p class="text-small">Interface préparée pour Excel/PDF. Flux futur : Upload → Analyse → Aperçu → Confirmation → Publication (Supabase Storage + Edge Function).</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px" class="form-row">
+          <div class="form-group"><label class="form-label">Niveau</label><select class="form-select" id="level"><option>Terminale</option><option>Première</option><option>Seconde</option></select></div>
+          <div class="form-group"><label class="form-label">Série</label><select class="form-select" id="serie"><option>F2</option><option>F3</option><option>D</option><option>C</option><option>A4</option></select></div>
+          <div class="form-group"><label class="form-label">Session</label><select class="form-select" id="session"><option>Deuxième trimestre</option><option>Premier trimestre</option><option>Troisième trimestre</option></select></div>
+        </div>
+        <div id="dropzone" class="dropzone" style="margin-top:12px">
+          <div class="dropzone__icon">⬙</div>
+          <div style="font-weight:600;color:var(--ipp-navy)">Glissez votre fichier ici</div>
+          <div class="text-small text-muted">Excel ou PDF — simulation complète côté frontend</div>
+          <input type="file" id="file" hidden accept=".xlsx,.xls,.pdf">
+          <button class="btn btn--secondary btn--small" style="margin-top:12px" id="pick">Choisir un fichier</button>
+          <div id="file-name" style="font-size:12px;color:var(--ipp-text-muted);margin-top:8px"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn--secondary btn--small" id="btn-preview">Analyser (simulation)</button><button class="btn btn--primary btn--small" id="btn-publish">Publier</button><button class="btn btn--ghost btn--small" id="btn-schedule">Programmer</button></div>
+      </div></div>
+
+      <div id="preview" hidden class="card" style="margin-top:16px"><div class="card__body">
+        <h3>Aperçu — détection simulée</h3><div id="preview-meta" class="text-small text-muted" style="margin:6px 0 12px"></div>
+        <div class="table-wrap"><table class="table"><thead><tr><th>Nom</th><th>Classe</th><th>Moyenne</th><th>Rang</th><th>Décision</th></tr></thead><tbody id="preview-body"></tbody></table></div>
+        <div class="alert alert--info" style="margin-top:12px">Le frontend peut commencer avec une simulation complète. Plus tard : JS → Supabase Storage / Edge Function → PostgreSQL.</div>
+      </div></div>
+
+      <div class="card" style="margin-top:16px"><div class="card__body"><h3>Programmer l'affichage public</h3><div class="form-row" style="margin-top:12px"><div class="form-group"><label class="form-label">Date de publication</label><input class="form-input" type="datetime-local" id="pub-at"></div><div class="form-group"><label class="form-label">État actuel (test)</label><select class="form-select" id="state"><option value="available">Disponibles</option><option value="scheduled">Programmé (countdown)</option><option value="empty">Aucun programmé</option></select></div></div><button class="btn btn--primary btn--small" id="apply-state">Appliquer</button></div></div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import {initAdmin} from "../js/admin/adminLayout.js";
+import {resultsService} from "../js/services/resultsService.js";
+import {excelService} from "../js/services/excelService.js";
+initAdmin({active:"results"});
+const dz=document.getElementById("dropzone"), fileEl=document.getElementById("file"), pick=document.getElementById("pick"), fname=document.getElementById("file-name");
+pick.addEventListener("click",()=>fileEl.click());
+fileEl.addEventListener("change",()=>{ if(fileEl.files[0]) fname.textContent=fileEl.files[0].name; });
+["dragover","dragenter"].forEach(ev=> dz.addEventListener(ev,e=>{e.preventDefault(); dz.classList.add("is-dragover");}));
+["dragleave","drop"].forEach(ev=> dz.addEventListener(ev,()=>dz.classList.remove("is-dragover")));
+dz.addEventListener("drop",e=>{e.preventDefault(); if(e.dataTransfer.files[0]){ fileEl.files=e.dataTransfer.files; fname.textContent=e.dataTransfer.files[0].name; }});
+
+document.getElementById("btn-preview").addEventListener("click", async()=>{
+  const level=document.getElementById("level").value, serie=document.getElementById("serie").value, session=document.getElementById("session").value;
+  const file = fileEl.files[0] || { name:"exemple.xlsx", size: 0 };
+  try{
+    // P9 — passe par la couche d'abstraction Excel (P8-9)
+    const res= await excelService.analyze({ file, level, serie, session });
+    document.getElementById("preview").hidden=false;
+    document.getElementById("preview-meta").textContent=`Fichier : ${res.fileName} — ${res.level} ${res.serie} — ${res.session} — ${res.detected} lignes détectées` + (res.autoDetected ? " (auto-détecté depuis le nom)" : "");
+    // P2 — construction sûre via textContent (pas d'innerHTML avec données élève)
+    const tbody = document.getElementById("preview-body");
+    tbody.innerHTML="";
+    res.preview.forEach(r=>{
+      const tr = document.createElement("tr");
+      const isAdmis = String(r.decision).toUpperCase().includes("ADMIS");
+      tr.style.background = isAdmis ? "#f7fee7" : "#fef2f2";
+      const tdName = document.createElement("td"); tdName.className="table__title"; tdName.style.borderLeft = `3px solid ${isAdmis ? "#84cc16" : "#ef4444"}`; tdName.textContent = r.name;
+      const tdClass = document.createElement("td"); tdClass.textContent = `${r.level} ${r.serie}`;
+      const tdAvg = document.createElement("td"); tdAvg.style.fontWeight="700"; tdAvg.textContent = r.average;
+      const tdRank = document.createElement("td"); tdRank.textContent = `${r.rank}/${r.total}`;
+      const tdDec = document.createElement("td");
+      const badge = document.createElement("span");
+      badge.style.cssText = `display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-weight:800;font-size:11px;letter-spacing:.05em;border:1px solid ${isAdmis ? "#65a30d" : "#dc2626"};box-shadow:0 1px 3px ${isAdmis ? "rgba(132,204,22,.25)" : "rgba(239,68,68,.25)"};background:${isAdmis ? "#84cc16" : "#ef4444"};color:#fff`;
+      badge.textContent = (isAdmis ? "✓ " : "✕ ") + r.decision;
+      tdDec.appendChild(badge);
+      tr.append(tdName, tdClass, tdAvg, tdRank, tdDec);
+      tbody.appendChild(tr);
+    });
+  }catch(err){
+    alert(err.message);
+  }
+});
+document.getElementById("btn-publish").addEventListener("click",()=>{ resultsService.setState("available"); alert("Résultats publiés (mock) — visibles sur la page Résultats publique.");});
+document.getElementById("btn-schedule").addEventListener("click",()=>{ const v=document.getElementById("pub-at").value; if(v) resultsService.setScheduledAt(new Date(v)); resultsService.setState("scheduled"); alert("Publication programmée (mock) — countdown actif.");});
+document.getElementById("apply-state").addEventListener("click",()=>{
+  const s=document.getElementById("state").value; resultsService.setState(s);
+  const v=document.getElementById("pub-at").value; if(v) resultsService.setScheduledAt(new Date(v));
+  alert("État appliqué : "+s);
+});
+</script>
+</body>
+</html>

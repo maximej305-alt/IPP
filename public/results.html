@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Résultats — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/public.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+<header class="site-header"><div class="container site-header__inner">
+  <a class="brand" href="index.html"><div class="brand__mark">IPP</div><div class="brand__text"><div class="brand__name">Institut Polytechnique LA PAIX</div><div class="brand__sub">Résultats scolaires</div></div></a>
+  <nav class="nav"><a class="nav__link" href="index.html">Accueil</a><a class="nav__link" href="results.html">Résultats</a><a class="nav__link" href="documents.html">Documents</a></nav>
+  <button class="nav-toggle" data-nav-toggle><span></span></button>
+</div><nav class="mobile-nav" data-mobile-nav><a class="mobile-nav__link" href="results.html">Résultats</a></nav></header>
+
+<main>
+  <section class="section" style="padding-bottom:16px">
+    <div class="container" style="max-width:780px; text-align:center">
+      <div class="kicker">Module central</div>
+      <h1 data-session-label>Résultats</h1>
+      <p style="margin:0 auto;max-width:560px">Sélectionnez votre niveau, votre série, puis recherchez votre nom. Seules moyenne, rang et décision sont affichés.</p>
+    </div>
+  </section>
+
+  <!-- État 1 : vide -->
+  <div class="container" style="max-width:780px">
+    <div data-state-empty hidden>
+      <div class="empty-state">
+        <div class="empty-state__icon">◯</div>
+        <div class="empty-state__title">Aucune publication de résultats n'est actuellement programmée.</div>
+        <p class="empty-state__desc">Veuillez revenir ultérieurement. Activez les notifications pour être informé dès publication.</p>
+        <div class="notify-banner" data-notify-banner style="text-align:left;margin-top:16px">
+          <span data-notify-status style="font-size:13px">Notifications désactivées</span>
+          <button class="btn btn--primary btn--small" data-notify-on>Activer les notifications</button>
+          <button class="btn btn--secondary btn--small" data-notify-off>Désactiver</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- État 2 : programmé -->
+    <div data-state-scheduled hidden>
+      <div class="card"><div class="card__body" style="text-align:center">
+        <div class="kicker">Publication programmée</div>
+        <h2 style="margin:8px 0">Résultats du 2ᵉ trimestre</h2>
+        <p class="text-small">Publication dans :</p>
+        <div class="countdown" style="justify-content:center;margin-top:16px">
+          <div class="countdown__block"><div class="countdown__value" data-cd-days>08</div><div class="countdown__label">jours</div></div>
+          <div class="countdown__block"><div class="countdown__value" data-cd-hours>14</div><div class="countdown__label">heures</div></div>
+          <div class="countdown__block"><div class="countdown__value" data-cd-mins>32</div><div class="countdown__label">minutes</div></div>
+          <div class="countdown__block"><div class="countdown__value" data-cd-secs>10</div><div class="countdown__label">secondes</div></div>
+        </div>
+        <div class="alert alert--info" style="margin-top:20px;text-align:left">Le compte à rebours apparaît uniquement lorsqu'une publication est réellement programmée.</div>
+      </div></div>
+    </div>
+
+    <!-- État 3 : disponibles -->
+    <div data-state-available hidden>
+      <div class="card"><div class="card__body">
+        <h3>Résultats disponibles</h3>
+        <p class="text-small">Sélectionnez votre niveau et série, puis saisissez votre nom.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="form-row">
+          <div class="form-group"><label class="form-label">Niveau</label><select class="form-select" data-level><option value="">Choisir</option></select></div>
+          <div class="form-group"><label class="form-label">Série / Classe</label><select class="form-select" data-serie><option value="">Choisir</option></select></div>
+        </div>
+        <div class="form-group" style="position:relative" data-search-wrap>
+          <label class="form-label">Nom de l'élève</label>
+          <input class="form-input" data-search-input placeholder="Ex. Asima..." autocomplete="off">
+          <div class="search-suggestions" data-suggestions></div>
+          <div class="form-hint">Tapez au moins 2 lettres. Exemples : Asima Gossan Soradéo, Koffi Jean-Baptiste</div>
+        </div>
+        <button class="btn btn--primary" data-consult style="width:100%;margin-top:8px">Consulter mon résultat</button>
+      </div></div>
+      <div data-result hidden style="margin-top:24px"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer"><div class="container"><div class="footer-bottom"><span>© 2026 IPP</span></div></div></footer>
+
+<script type="module">
+import {initPublicLayout, initNotifyBanner} from "../js/shared/layout.js";
+import {initResultsPage} from "../js/public/results.js";
+initPublicLayout(); initNotifyBanner();
+initResultsPage();
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Connexion — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/admin.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-card__header">
+      <div class="login-card__logo">IPP</div>
+      <h2 style="margin:0">Connexion administration</h2>
+      <p class="text-small text-muted" style="margin:6px 0 0">Accès réservé au personnel autorisé</p>
+    </div>
+    <form id="login-form">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" name="email" type="email" value="admin@ipp.tg" required></div>
+      <div class="form-group"><label class="form-label">Mot de passe</label><input class="form-input" name="password" type="password" value="demo" required><div class="form-hint">Mode mock : tout mot de passe accepté pour l'email listé.</div></div>
+      <div id="login-error" hidden class="alert" style="background:var(--ipp-danger-bg);border-color:#fecaca;color:var(--ipp-danger);margin-bottom:12px"></div>
+      <button class="btn btn--primary" type="submit" style="width:100%">Se connecter</button>
+    </form>
+    <div style="margin-top:16px;font-size:12px;color:var(--ipp-text-muted);text-align:center">
+      Comptes mock : admin@ipp.tg · admin01@ipp.tg · editeur@ipp.tg<br><a href="../index.html">← Retour site public</a>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { authService } from "../js/services/authService.js";
+document.getElementById("login-form").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const err = document.getElementById("login-error");
+  try{
+    await authService.login(fd.get("email"), fd.get("password"));
+    location.href = "dashboard.html";
+  }catch(ex){ err.textContent=ex.message; err.hidden=false; }
+});
+</script>
+</body>
+</html>

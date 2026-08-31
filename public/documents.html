@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Documents — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/public.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+<header class="site-header"><div class="container site-header__inner">
+  <a class="brand" href="index.html"><div class="brand__mark">IPP</div><div class="brand__text"><div class="brand__name">Institut Polytechnique LA PAIX</div><div class="brand__sub">Documents</div></div></a>
+  <nav class="nav"><a class="nav__link" href="documents.html">Documents</a><a class="nav__link" href="results.html">Résultats</a></nav>
+  <button class="nav-toggle" data-nav-toggle><span></span></button>
+</div><nav class="mobile-nav" data-mobile-nav><a class="mobile-nav__link" href="documents.html">Documents</a></nav></header>
+<main class="section">
+  <div class="container" style="max-width:800px">
+    <div class="kicker">Ressources</div><h1>Documents</h1><p>PDF, listes et programmes publiés temporairement. Chaque document peut avoir une date d'expiration.</p>
+    <div id="doc-list" class="doc-list" style="margin-top:20px"><div class="text-muted" style="padding:20px;text-align:center">Chargement des documents…</div></div>
+  </div>
+</main>
+<footer class="site-footer"><div class="container"><div class="footer-bottom"><span>© 2026 IPP</span></div></div></footer>
+<script type="module">
+import {initPublicLayout} from "../js/shared/layout.js";
+import {documentService} from "../js/services/documentService.js";
+initPublicLayout();
+const listEl=document.getElementById("doc-list");
+try{
+  const list = await documentService.getPublishedDocuments(20);
+  listEl.innerHTML="";
+  if(list.length===0){
+    listEl.innerHTML='<div class="empty-state"><div class="empty-state__title">Aucun document n\'est disponible pour le moment.</div></div>';
+  } else {
+    list.forEach(d=>{
+      const item=document.createElement("div"); item.className="doc-item";
+      const icon=document.createElement("div"); icon.className="doc-item__icon"; icon.textContent="PDF";
+      const info=document.createElement("div"); info.style.flex="1";
+      const title=document.createElement("div"); title.style.cssText="font-weight:600;color:var(--ipp-navy);font-size:14px"; title.textContent=d.title;
+      const desc=document.createElement("div"); desc.style.cssText="font-size:13px;color:var(--ipp-text-muted)"; desc.textContent=d.description || d.desc || "";
+      const meta=document.createElement("div"); meta.className="card__meta"; meta.style.marginTop="4px";
+      const dateSpan=document.createElement("span"); dateSpan.textContent=d.date || (d.created_at? d.created_at.slice(0,10): "");
+      const sizeSpan=document.createElement("span"); sizeSpan.textContent=d.size || (d.file_size? (d.file_size/1024/1024).toFixed(1)+" Mo":"");
+      const badge=document.createElement("span"); badge.className="badge badge--active"; badge.textContent=d.status;
+      meta.append(dateSpan, sizeSpan, badge);
+      if(d.expires_at){
+        const exp=document.createElement("span"); exp.textContent="Expire : "+d.expires_at.slice(0,10); meta.appendChild(exp);
+      }
+      info.append(title, desc, meta);
+      const link=document.createElement("a"); link.className="btn btn--secondary btn--small"; link.textContent="Télécharger";
+      // URL publique via bucket documents
+      link.href = documentService.getPublicDocumentUrl(d.file_path);
+      link.target="_blank"; link.rel="noopener";
+      if(link.href==="#" || !d.file_path){ link.addEventListener("click", e=>{ e.preventDefault(); alert("Fichier non disponible"); }); }
+      item.append(icon, info, link);
+      listEl.appendChild(item);
+    });
+  }
+}catch(err){
+  listEl.innerHTML='<div class="alert">Impossible de charger les documents. Veuillez réessayer ultérieurement.</div>';
+  console.error(err);
+}
+</script>
+</body>
+</html>

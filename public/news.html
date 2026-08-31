@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Actualités — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/public.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+<div class="top-bar"><div class="container top-bar__inner"><span>IPP — Actualités officielles</span><a href="index.html">← Retour accueil</a></div></div>
+<header class="site-header"><div class="container site-header__inner">
+  <a class="brand" href="index.html"><div class="brand__mark">IPP</div><div class="brand__text"><div class="brand__name">Institut Polytechnique LA PAIX</div><div class="brand__sub">Actualités</div></div></a>
+  <nav class="nav"><a class="nav__link" href="index.html">Accueil</a><a class="nav__link" href="news.html">Actualités</a><a class="nav__link" href="events.html">Événements</a><a class="nav__link" href="results.html">Résultats</a><a class="nav__link" href="documents.html">Documents</a><a class="nav__link" href="gallery.html">Galerie</a></nav>
+  <button class="nav-toggle" data-nav-toggle><span></span></button>
+</div><nav class="mobile-nav" data-mobile-nav><a class="mobile-nav__link" href="news.html">Actualités</a><a class="mobile-nav__link" href="results.html">Résultats</a></nav></header>
+
+<main class="section">
+  <div class="container" style="max-width:800px">
+    <div class="kicker">Publications</div>
+    <h1>Actualités & communiqués</h1>
+    <p>Les publications actives de l'établissement. Les contenus expirés sont automatiquement archivés pour économiser le stockage.</p>
+    <div id="news-list" style="margin-top:24px;display:grid;gap:16px"></div>
+    <div id="news-detail" hidden style="margin-top:24px"></div>
+  </div>
+</main>
+<footer class="site-footer"><div class="container"><div class="footer-bottom"><span>© 2026 IPP</span></div></div></footer>
+<script type="module">
+import {initPublicLayout} from "../js/shared/layout.js";
+import {newsService} from "../js/services/newsService.js";
+initPublicLayout();
+const listEl = document.getElementById("news-list");
+const detailEl = document.getElementById("news-detail");
+const data = await newsService.list();
+const imgs = ["../assets/images/classroom.jpg","../assets/images/atelier-technique.jpg","../assets/images/bibliotheque.jpg","../assets/images/campus.jpg"];
+// P2 — construction sûre via textContent
+data.forEach((n,i)=>{
+  const article = document.createElement("article");
+  article.className="card"; article.style.cssText="cursor:pointer;overflow:hidden"; article.dataset.id=n.id;
+  const grid = document.createElement("div"); grid.style.cssText="display:grid;grid-template-columns:140px 1fr;gap:0";
+  const img = document.createElement("img"); img.src=imgs[i % imgs.length]; img.alt=""; img.style.cssText="width:100%;height:100%;object-fit:cover;min-height:140px"; img.loading="lazy";
+  const body = document.createElement("div"); body.className="card__body";
+  const meta = document.createElement("div"); meta.className="card__meta";
+  const dateSpan = document.createElement("span"); dateSpan.textContent = "Publié le " + new Date(n.date).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+  const badge = document.createElement("span"); badge.className = "badge " + (n.status==="active"?"badge--active":"badge--expired"); badge.textContent = n.status;
+  meta.append(dateSpan, badge);
+  const h3 = document.createElement("h3"); h3.className="card__title"; h3.style.marginTop="6px"; h3.textContent = n.title;
+  const p = document.createElement("p"); p.className="card__excerpt"; p.textContent = n.excerpt;
+  const link = document.createElement("span"); link.className="qa-card__link"; link.textContent = "Lire le contenu →";
+  body.append(meta, h3, p, link);
+  grid.append(img, body);
+  article.appendChild(grid);
+  listEl.appendChild(article);
+});
+listEl.addEventListener("click", async (e)=>{
+  const card=e.target.closest("[data-id]"); if(!card) return;
+  const item = await newsService.getById(card.dataset.id);
+  detailEl.hidden=false;
+  detailEl.innerHTML="";
+  const wrap = document.createElement("div"); wrap.className="card"; wrap.style.overflow="hidden";
+  const img = document.createElement("img"); img.src=imgs[0]; img.alt=""; img.style.cssText="width:100%;height:220px;object-fit:cover"; img.loading="lazy";
+  const body = document.createElement("div"); body.className="card__body";
+  const kicker = document.createElement("div"); kicker.className="kicker"; kicker.textContent="Publication";
+  const h2 = document.createElement("h2"); h2.textContent = item.title;
+  const meta = document.createElement("div"); meta.className="card__meta"; meta.style.margin="8px 0 16px"; meta.textContent = "Publié le " + item.date;
+  const p = document.createElement("p"); p.textContent = item.content; // textContent évite XSS si contenu riche → à sanitizer plus tard
+  const btn = document.createElement("button"); btn.className="btn btn--secondary btn--small"; btn.textContent="Fermer"; btn.addEventListener("click", ()=> detailEl.hidden=true);
+  body.append(kicker, h2, meta, p, btn);
+  wrap.append(img, body);
+  detailEl.appendChild(wrap);
+  detailEl.scrollIntoView({behavior:"smooth"});
+});
+</script>
+</body>
+</html>

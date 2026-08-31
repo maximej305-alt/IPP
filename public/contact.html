@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Contact — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/public.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+<header class="site-header"><div class="container site-header__inner">
+  <a class="brand" href="index.html"><div class="brand__mark">IPP</div><div class="brand__text"><div class="brand__name">Institut Polytechnique LA PAIX</div><div class="brand__sub">Contact</div></div></a>
+  <nav class="nav"><a class="nav__link" href="contact.html">Contact</a><a class="nav__link" href="about.html">L'établissement</a></nav>
+  <button class="nav-toggle" data-nav-toggle><span></span></button>
+</div><nav class="mobile-nav" data-mobile-nav><a class="mobile-nav__link" href="contact.html">Contact</a></nav></header>
+<main class="section">
+  <div class="container" style="max-width:800px">
+    <div class="kicker">Nous contacter</div><h1>Contact</h1>
+    <div style="border-radius:14px;overflow:hidden;height:180px;margin:16px 0 8px"><img src="../assets/images/campus.jpg" alt="Campus IPP" style="width:100%;height:100%;object-fit:cover" loading="lazy"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px" class="hero__grid">
+      <div class="card"><div class="card__body">
+        <h3>Informations</h3>
+        <div style="display:grid;gap:12px;margin-top:12px;font-size:14px">
+          <div><strong style="color:var(--ipp-navy)">Institut Polytechnique LA PAIX</strong><br><span class="text-muted">Adresse : Informations bientôt disponibles</span></div>
+          <div><span class="text-muted">Téléphone : Informations bientôt disponibles</span></div>
+          <div><span class="text-muted">Email : Informations bientôt disponibles</span></div>
+          <div class="alert alert--info" style="margin-top:8px">Carte interactive prévue ultérieurement.</div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card__body">
+        <h3>Envoyer un message</h3>
+        <form onsubmit="event.preventDefault(); alert('Message simulé — envoi désactivé en mode mock.');">
+          <div class="form-group"><label class="form-label">Nom</label><input class="form-input" required></div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" required></div>
+          <div class="form-group"><label class="form-label">Message</label><textarea class="form-textarea" rows="4" required></textarea></div>
+          <button class="btn btn--primary" type="submit" style="width:100%">Envoyer</button>
+          <div class="form-hint">Formulaire de contact uniquement si nécessaire — pas de backend en V1.</div>
+        </form>
+      </div></div>
+    </div>
+  </div>
+</main>
+<footer class="site-footer"><div class="container"><div class="footer-bottom"><span>© 2026 IPP</span></div></div></footer>
+<script type="module">import {initPublicLayout} from "../js/shared/layout.js"; initPublicLayout();</script>
+</body>
+</html>

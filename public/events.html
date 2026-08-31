@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Événements — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/public.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+<header class="site-header"><div class="container site-header__inner">
+  <a class="brand" href="index.html"><div class="brand__mark">IPP</div><div class="brand__text"><div class="brand__name">Institut Polytechnique LA PAIX</div><div class="brand__sub">Événements</div></div></a>
+  <nav class="nav"><a class="nav__link" href="index.html">Accueil</a><a class="nav__link" href="news.html">Actualités</a><a class="nav__link" href="events.html">Événements</a><a class="nav__link" href="results.html">Résultats</a><a class="nav__link" href="gallery.html">Galerie</a></nav>
+  <button class="nav-toggle" data-nav-toggle><span></span></button>
+</div><nav class="mobile-nav" data-mobile-nav><a class="mobile-nav__link" href="events.html">Événements</a></nav></header>
+<main class="section">
+  <div class="container" style="max-width:780px">
+    <div style="border-radius:14px;overflow:hidden;margin-bottom:20px;height:200px;position:relative">
+      <img src="../assets/images/bibliotheque.jpg" alt="Événements IPP" style="width:100%;height:100%;object-fit:cover" loading="lazy">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(15,42,68,.45), transparent);display:flex;align-items:end;padding:16px;color:#fff;font-weight:700">Calendrier officiel IPP</div>
+    </div>
+    <div class="kicker">Calendrier</div><h1>Événements</h1><p>Compositions, semaines techniques, journées culturelles et activités.</p>
+    <div id="timeline" style="margin-top:24px" class="timeline"></div>
+  </div>
+</main>
+<footer class="site-footer"><div class="container"><div class="footer-bottom"><span>© 2026 IPP</span></div></div></footer>
+<script type="module">
+import {initPublicLayout} from "../js/shared/layout.js";
+import {eventService} from "../js/services/eventService.js";
+initPublicLayout();
+const el = document.getElementById("timeline");
+el.innerHTML='<div class="text-muted" style="padding:20px;text-align:center">Chargement des événements…</div>';
+try{
+  const groups = await eventService.groupedByMonth();
+  el.innerHTML="";
+  if(Object.keys(groups).length===0){
+    el.innerHTML='<div class="empty-state"><div class="empty-state__title">Aucun événement n\'est actuellement programmé.</div></div>';
+  } else {
+    Object.entries(groups).forEach(([month, items])=>{
+      const group = document.createElement("div"); group.className="timeline__group";
+      const monthEl = document.createElement("div"); monthEl.className="timeline__month"; monthEl.textContent = month;
+      group.appendChild(monthEl);
+      items.forEach(ev=>{
+        const state = eventService.getEventState(ev);
+        const item = document.createElement("div"); item.className="timeline__item";
+        const dateBox = document.createElement("div"); dateBox.className="timeline__date";
+        const day = document.createElement("div"); day.className="timeline__day"; day.textContent = new Date(ev.event_date||ev.start).getDate();
+        const wd = document.createElement("div"); wd.className="timeline__weekday"; wd.textContent = new Date(ev.event_date||ev.start).toLocaleDateString("fr-FR",{weekday:"short"});
+        dateBox.append(day, wd);
+        const info = document.createElement("div");
+        const title = document.createElement("div"); title.style.cssText="font-weight:600;color:var(--ipp-navy)"; title.textContent = ev.title;
+        const desc = document.createElement("div"); desc.style.cssText="font-size:13px;color:var(--ipp-text-muted)"; desc.textContent = ev.description;
+        const meta = document.createElement("div"); meta.style.marginTop="6px";
+        const badge = document.createElement("span"); badge.className = "badge " + (state==="ongoing"?"badge--active":state==="upcoming"?"badge--programmed":"badge--expired"); badge.textContent = state==="ongoing"?"En cours":state==="upcoming"?"À venir":"Terminé";
+        const dates = document.createElement("span"); dates.style.cssText="font-size:12px;color:var(--ipp-text-muted)"; const end = ev.end_date||ev.end||ev.event_date||ev.start; dates.textContent = (ev.event_date||ev.start) + (end!== (ev.event_date||ev.start)?` → ${end}`:"");
+        meta.append(badge, document.createTextNode(" "), dates);
+        info.append(title, desc, meta);
+        item.append(dateBox, info);
+        group.appendChild(item);
+      });
+      el.appendChild(group);
+    });
+  }
+}catch(err){
+  el.innerHTML='<div class="alert">Impossible de charger les événements pour le moment. Veuillez réessayer plus tard.</div>';
+  console.error(err);
+}
+</script>
+</body>
+</html>

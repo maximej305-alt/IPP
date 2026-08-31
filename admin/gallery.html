@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Galerie — IPP</title>
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/global.css"><link rel="stylesheet" href="../css/admin.css"><link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <aside class="admin-sidebar" data-admin-sidebar><div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div></div></div>
+  <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html">◎ Galerie</a><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a><a class="admin-nav__link" data-admin-nav="documents" href="documents.html">⬙ Documents</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a></nav>
+  <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
+  <div class="admin-main">
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Galerie</div></div><button class="btn btn--primary btn--small" onclick="alert('Upload simulé — optimisation prévue pour économiser le stockage.')">Uploader</button></div>
+    <div class="admin-content">
+      <div class="alert alert--info">Les images devront être optimisées avant ou pendant l'upload afin d'économiser le stockage (offre gratuite).</div>
+      <div id="grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px"></div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import {initAdmin} from "../js/admin/adminLayout.js";
+import {galleryService} from "../js/services/galleryService.js";
+initAdmin({active:"gallery"});
+const list=await galleryService.list();
+document.getElementById("grid").innerHTML=list.map(g=>`
+  <div class="card"><div style="height:140px;background:var(--ipp-bg-alt);display:grid;place-items:center;color:var(--ipp-text-muted);font-size:13px;border-bottom:1px solid var(--ipp-border)">Image bientôt disponible</div><div class="card__body"><div class="card__title">${g.album}</div><div class="card__meta"><span>${g.year}</span><span>${g.count} photos</span></div></div></div>
+`).join("");
+</script>
+</body>
+</html>
