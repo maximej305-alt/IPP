@@ -118,7 +118,7 @@ export const documentService = {
     const { data, error } = await supabase.from("documents").insert({ ...payload, created_by: user?.id || null }).select().single();
     if(error){
       // Rollback storage si DB échoue
-      if(upload) await supabase.storage.from("documents").remove([upload.path]).catch(()=>{});
+      if(upload) await supabase.storage.from("documents").remove([upload.path]).catch((err)=>{ if(err) console.warn("Storage remove error:", err.message); });
       throw error;
     }
     return mapRow(data);
@@ -155,7 +155,7 @@ export const documentService = {
     const { error } = await supabase.from("documents").delete().eq("id", id);
     if(error) throw error;
     if(row?.file_path){
-      await supabase.storage.from("documents").remove([row.file_path]).catch(()=>{});
+      await supabase.storage.from("documents").remove([row.file_path]).catch((err)=>{ if(err) console.warn("Storage remove error:", err.message); });
     }
   },
 

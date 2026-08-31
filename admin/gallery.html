@@ -9,21 +9,315 @@
   <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html">◎ Galerie</a><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a><a class="admin-nav__link" data-admin-nav="documents" href="documents.html">⬙ Documents</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a></nav>
   <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
   <div class="admin-main">
-    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Galerie</div></div><button class="btn btn--primary btn--small" onclick="alert('Upload simulé — optimisation prévue pour économiser le stockage.')">Uploader</button></div>
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Galerie</div></div><button class="btn btn--primary btn--small" data-open-create>Nouvel album</button></div>
     <div class="admin-content">
-      <div class="alert alert--info">Les images devront être optimisées avant ou pendant l'upload afin d'économiser le stockage (offre gratuite).</div>
-      <div id="grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px"></div>
+      <div class="alert alert--info">Les images sont limitées à 5 Mo (JPEG, PNG, WebP). La galerie est publique.</div>
+      <div id="root"></div>
     </div>
   </div>
 </div>
+
+<!-- Modale : créer un album -->
+<div id="create-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.4);display:grid;place-items:center;padding:16px;z-index:60">
+  <div class="card" style="width:100%;max-width:480px"><div class="card__body">
+    <h3>Nouvel album</h3>
+    <form id="create-form" style="margin-top:12px">
+      <div class="form-group"><label class="form-label">Titre *</label><input class="form-input" name="title" required></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" name="description" rows="2"></textarea></div>
+      <div class="form-group"><label class="form-label">Date de l'événement</label><input class="form-input" type="date" name="event_date"></div>
+      <div class="form-hint" data-create-error hidden style="color:var(--ipp-danger,#c0392b)"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn btn--secondary btn--small" type="button" data-close-create>Annuler</button>
+        <button class="btn btn--primary btn--small" type="submit" data-create-submit>Créer</button>
+      </div>
+    </form>
+  </div></div>
+</div>
+
+<!-- Modale : gérer un album -->
+<div id="manage-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.5);display:grid;place-items:center;padding:16px;z-index:70;overflow:auto">
+  <div class="card" style="width:100%;max-width:640px"><div class="card__body">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div>
+        <h3 data-manage-title style="margin:0"></h3>
+        <div class="text-muted" style="font-size:13px" data-manage-meta></div>
+      </div>
+      <button class="btn btn--secondary btn--small" data-close-manage>Fermer</button>
+    </div>
+    <div style="margin:16px 0">
+      <label class="form-label">Ajouter des images (≤5 Mo, JPEG/PNG/WebP)</label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="form-input" type="file" accept="image/jpeg,image/png,image/webp,image/jpg" multiple data-upload-input style="flex:1;min-width:220px">
+        <button class="btn btn--primary btn--small" data-upload-btn>Uploader</button>
+      </div>
+      <div class="form-hint" data-upload-error hidden style="color:var(--ipp-danger,#c0392b)"></div>
+    </div>
+    <div id="manage-images">
+      <div class="text-muted" data-manage-empty hidden>Aucune image dans cet album.</div>
+      <div id="manage-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn btn--danger btn--small" data-delete-album>Supprimer l'album</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Modale : confirmation -->
+<div id="confirm-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.5);display:grid;place-items:center;padding:16px;z-index:90">
+  <div class="card" style="width:100%;max-width:420px"><div class="card__body">
+    <h3 data-confirm-title style="margin:0 0 8px">Confirmer</h3>
+    <p data-confirm-text style="margin:0 0 16px"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn--secondary btn--small" data-confirm-cancel>Annuler</button>
+      <button class="btn btn--danger btn--small" data-confirm-ok>Confirmer</button>
+    </div>
+  </div></div>
+</div>
+
 <script type="module">
 import {initAdmin} from "../js/admin/adminLayout.js";
 import {galleryService} from "../js/services/galleryService.js";
 initAdmin({active:"gallery"});
-const list=await galleryService.list();
-document.getElementById("grid").innerHTML=list.map(g=>`
-  <div class="card"><div style="height:140px;background:var(--ipp-bg-alt);display:grid;place-items:center;color:var(--ipp-text-muted);font-size:13px;border-bottom:1px solid var(--ipp-border)">Image bientôt disponible</div><div class="card__body"><div class="card__title">${g.album}</div><div class="card__meta"><span>${g.year}</span><span>${g.count} photos</span></div></div></div>
-`).join("");
+
+const root = document.getElementById("root");
+const createModal = document.getElementById("create-modal");
+const createForm = document.getElementById("create-form");
+const createError = document.querySelector("[data-create-error]");
+const manageModal = document.getElementById("manage-modal");
+const confirmModal = document.getElementById("confirm-modal");
+const uploadInput = document.querySelector("[data-upload-input]");
+const uploadBtn = document.querySelector("[data-upload-btn]");
+const uploadError = document.querySelector("[data-upload-error]");
+
+let currentAlbum = null;
+
+// ---------- Navigation modales ----------
+document.querySelector("[data-open-create]").addEventListener("click", ()=>{
+  createError.hidden = true; createForm.reset();
+  createModal.hidden = false;
+});
+document.querySelector("[data-close-create]").addEventListener("click", ()=> createModal.hidden = true);
+createModal.addEventListener("click", e=>{ if(e.target===createModal) createModal.hidden = true; });
+document.querySelector("[data-close-manage]").addEventListener("click", ()=> manageModal.hidden = true);
+manageModal.addEventListener("click", e=>{ if(e.target===manageModal) manageModal.hidden = true; });
+
+// ---------- Confirmation ----------
+let confirmAction = null;
+const confirmTitle = document.querySelector("[data-confirm-title]");
+const confirmText = document.querySelector("[data-confirm-text]");
+document.querySelector("[data-confirm-cancel]").addEventListener("click", ()=>{ confirmModal.hidden = true; confirmAction = null; });
+confirmModal.addEventListener("click", e=>{ if(e.target===confirmModal){ confirmModal.hidden=true; confirmAction=null; } });
+document.querySelector("[data-confirm-ok]").addEventListener("click", async ()=>{
+  const action = confirmAction;
+  confirmModal.hidden = true; confirmAction = null;
+  if(action) await action();
+});
+function askConfirm(title, text, fn){
+  confirmTitle.textContent = title;
+  confirmText.textContent = text;
+  confirmAction = fn;
+  confirmModal.hidden = false;
+}
+
+// ---------- Rendu des albums ----------
+async function render(){
+  root.innerHTML = '<div class="text-muted" data-loading>Chargement…</div>';
+  let albums;
+  try{
+    albums = await galleryService.getAlbums();
+  }catch(err){
+    root.innerHTML = "";
+    const msg = document.createElement("div");
+    msg.className = "alert alert--danger";
+    msg.textContent = "Erreur de chargement de la galerie. Réessayez.";
+    root.appendChild(msg);
+    return;
+  }
+  root.innerHTML = "";
+  if(!albums || albums.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    const icon = document.createElement("div"); icon.className="empty-state__icon"; icon.textContent="◈";
+    const title = document.createElement("div"); title.className="empty-state__title"; title.textContent="Aucun album. Créez votre premier album.";
+    empty.append(icon, title);
+    root.appendChild(empty);
+    return;
+  }
+  const grid = document.createElement("div");
+  grid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px";
+  albums.forEach(a => grid.appendChild(renderAlbumCard(a)));
+  root.appendChild(grid);
+}
+
+function renderAlbumCard(album){
+  const card = document.createElement("div"); card.className="card"; card.style.overflow="hidden";
+  const imgWrap = document.createElement("div");
+  imgWrap.style.cssText = "height:140px;background:var(--ipp-bg-alt);display:grid;place-items:center;color:var(--ipp-text-muted);font-size:13px;border-bottom:1px solid var(--ipp-border);overflow:hidden";
+  const img = document.createElement("img");
+  img.alt = album.title || "Album";
+  img.style.cssText = "width:100%;height:100%;object-fit:cover";
+  if(album.cover_image_path){
+    galleryService.getPublicUrl(album.cover_image_path).then(url => {
+      if(url) img.src = url; else img.style.display="none";
+    }).catch(()=>{ img.style.display="none"; });
+  } else {
+    img.style.display = "none";
+  }
+  imgWrap.appendChild(img);
+  const body = document.createElement("div"); body.className="card__body";
+  const title = document.createElement("div"); title.className="card__title"; title.textContent = album.title;
+  const meta = document.createElement("div"); meta.className="card__meta";
+  const span = document.createElement("span");
+  span.textContent = (album.year || "Non daté") + " · " + album._imageCount + " photos";
+  meta.appendChild(span);
+  const actions = document.createElement("div");
+  actions.style.cssText = "display:flex;gap:8px;margin-top:10px";
+  const manageBtn = document.createElement("button");
+  manageBtn.className = "btn btn--secondary btn--small";
+  manageBtn.textContent = "Gérer";
+  manageBtn.addEventListener("click", ()=> openManage(album));
+  actions.appendChild(manageBtn);
+  body.append(title, meta, actions);
+  card.append(imgWrap, body);
+  return card;
+}
+
+// ---------- Gestion d'un album ----------
+async function openManage(album){
+  currentAlbum = album;
+  document.querySelector("[data-manage-title]").textContent = album.title;
+  document.querySelector("[data-manage-meta]").textContent =
+    (album.year || "Non daté") + " · " + album._imageCount + " photos";
+  uploadError.hidden = true; uploadInput.value = "";
+  const emptyEl = document.querySelector("[data-manage-empty]");
+  emptyEl.hidden = true;
+  const grid = document.getElementById("manage-grid");
+  grid.innerHTML = '<div class="text-muted">Chargement…</div>';
+  manageModal.hidden = false;
+  try{
+    const images = await galleryService.getAlbumImages(album.id);
+    grid.innerHTML = "";
+    if(images.length === 0){
+      emptyEl.hidden = false;
+    }
+    for(const img of images){
+      grid.appendChild(await renderImageTile(img));
+    }
+  }catch(err){
+    grid.innerHTML = "";
+    emptyEl.hidden = false;
+  }
+}
+
+async function renderImageTile(img){
+  const tile = document.createElement("div"); tile.className="card"; tile.style.overflow="hidden";
+  const imgWrap = document.createElement("div");
+  imgWrap.style.cssText = "height:120px;background:var(--ipp-bg-alt);overflow:hidden";
+  const imageEl = document.createElement("img");
+  imageEl.alt = img.caption || "Image";
+  imageEl.style.cssText = "width:100%;height:100%;object-fit:cover";
+  const url = await galleryService.getPublicUrl(img.image_path);
+  imageEl.src = url || "../assets/images/campus.jpg";
+  imgWrap.appendChild(imageEl);
+  const body = document.createElement("div"); body.className="card__body";
+  const del = document.createElement("button");
+  del.className = "btn btn--danger btn--small";
+  del.textContent = "Supprimer";
+  del.addEventListener("click", ()=>{
+    askConfirm("Supprimer cette image ?", "L'image sera retirée de l'album et du stockage.", async ()=>{
+      const res = await galleryService.deleteImage(img.id);
+      if(!res.success){
+        alert("Erreur : " + (res.error?.message || "suppression impossible"));
+        return;
+      }
+      if(res.cleanupWarning) console.warn("[gallery] cleanup", res.cleanupWarning);
+      await openManage(currentAlbum);
+      await render();
+    });
+  });
+  body.appendChild(del);
+  tile.append(imgWrap, body);
+  return tile;
+}
+
+// ---------- Upload ----------
+function setUploadBusy(busy){
+  uploadBtn.disabled = busy;
+  uploadInput.disabled = busy;
+  uploadBtn.textContent = busy ? "Upload…" : "Uploader";
+}
+uploadBtn.addEventListener("click", async ()=>{
+  if(uploadBtn.disabled) return;
+  const files = uploadInput.files ? Array.from(uploadInput.files) : [];
+  if(files.length === 0){
+    uploadError.hidden = false;
+    uploadError.textContent = "Sélectionnez au moins une image.";
+    return;
+  }
+  uploadError.hidden = true;
+  setUploadBusy(true);
+  try{
+    const res = await galleryService.uploadImages({ albumId: currentAlbum.id, files });
+    if(res.failCount > 0){
+      uploadError.hidden = false;
+      uploadError.textContent = res.successCount + " uploadée(s), " + res.failCount + " en échec.";
+      const firstErr = res.results.find(r => !r.success);
+      if(firstErr && firstErr.error) console.warn("[gallery] upload", firstErr.error);
+    }
+    await openManage(currentAlbum);
+    await render();
+  }catch(err){
+    uploadError.hidden = false;
+    uploadError.textContent = "Erreur lors de l'upload : " + (err?.message || "erreur inconnue");
+  }finally{
+    setUploadBusy(false);
+  }
+});
+
+// ---------- Création d'album ----------
+createForm.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  if(createForm.querySelector("[data-create-submit]").disabled) return;
+  const title = createForm.title.value.trim();
+  const description = createForm.description.value.trim();
+  const event_date = createForm.event_date.value || null;
+  const btn = createForm.querySelector("[data-create-submit]");
+  btn.disabled = true;
+  try{
+    const res = await galleryService.createAlbum({ title, description, event_date });
+    if(!res.success){
+      createError.hidden = false;
+      createError.textContent = res.error?.message || "Création impossible.";
+      return;
+    }
+    createModal.hidden = true;
+    createForm.reset();
+    await render();
+  }catch(err){
+    createError.hidden = false;
+    createError.textContent = "Erreur : " + (err?.message || "erreur inconnue");
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+// ---------- Suppression d'album ----------
+document.querySelector("[data-delete-album]").addEventListener("click", ()=>{
+  if(!currentAlbum) return;
+  askConfirm("Supprimer cet album ?", "L'album, ses images en base et leurs fichiers dans le stockage seront supprimés.", async ()=>{
+    const res = await galleryService.deleteAlbum(currentAlbum.id);
+    if(!res.success){
+      alert("Erreur : " + (res.error?.message || "suppression impossible"));
+      return;
+    }
+    if(res.cleanupWarning) console.warn("[gallery] cleanup album", res.cleanupWarning);
+    manageModal.hidden = true;
+    currentAlbum = null;
+    await render();
+  });
+});
+
+render();
 </script>
 </body>
 </html>

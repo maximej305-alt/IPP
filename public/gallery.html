@@ -18,26 +18,70 @@
 import {initPublicLayout} from "../js/shared/layout.js";
 import {galleryService} from "../js/services/galleryService.js";
 initPublicLayout();
-const grouped = await galleryService.grouped();
-const root = document.getElementById("gallery-root");
-const albumImgs = {"Semaine technique":"../assets/images/atelier-technique.jpg","Activités sportives":"../assets/images/hero-students.jpg","Journée culturelle":"../assets/images/graduation.jpg"};
-// P2 — textContent pour album/count/year
-Object.entries(grouped).forEach(([year, albums])=>{
-  const h3 = document.createElement("h3"); h3.style.margin="24px 0 12px"; h3.textContent = year; root.appendChild(h3);
-  const grid = document.createElement("div"); grid.className="gallery-grid";
-  albums.forEach(a=>{
-    const card = document.createElement("div"); card.className="card"; card.style.overflow="hidden";
-    const imgWrap = document.createElement("div"); imgWrap.style.cssText="height:180px;overflow:hidden";
-    const img = document.createElement("img"); img.src = albumImgs[a.album]||'../assets/images/campus.jpg'; img.alt = a.album; img.style.cssText="width:100%;height:100%;object-fit:cover"; img.loading="lazy";
-    imgWrap.appendChild(img);
-    const body = document.createElement("div"); body.className="card__body";
-    const title = document.createElement("div"); title.className="card__title"; title.textContent = a.album;
-    const meta = document.createElement("div"); meta.className="card__meta";
-    const span = document.createElement("span"); span.textContent = a.count + " photos";
-    meta.appendChild(span); body.append(title, meta); card.append(imgWrap, body); grid.appendChild(card);
+(async()=>{
+  const root = document.getElementById("gallery-root");
+  root.innerHTML = '<div class="text-muted" data-loading>Chargement des galeries…</div>';
+  let albums;
+  try{
+    albums = await galleryService.getAlbums();
+  }catch(err){
+    root.innerHTML = "";
+    const msg = document.createElement("div");
+    msg.className = "alert alert--danger";
+    msg.textContent = "Impossible de charger la galerie pour le moment. Veuillez réessayer ultérieurement.";
+    root.appendChild(msg);
+    return;
+  }
+  if(!albums || albums.length===0){
+    root.innerHTML = "";
+    const msg = document.createElement("div");
+    msg.className = "empty-state";
+    const icon = document.createElement("div"); icon.className = "empty-state__icon"; icon.textContent = "◈";
+    const title = document.createElement("div"); title.className = "empty-state__title"; title.textContent = "Aucune galerie disponible pour le moment.";
+    msg.append(icon, title);
+    root.appendChild(msg);
+    return;
+  }
+  // Regroupement par année (dérivée de event_date ; repli "Non daté").
+  const byYear = {};
+  for(const a of albums){
+    const key = a.year || "Non daté";
+    if(!byYear[key]) byYear[key] = [];
+    byYear[key].push(a);
+  }
+  Object.entries(byYear).forEach(([year, list]) => {
+    const h3 = document.createElement("h3"); h3.style.margin="24px 0 12px"; h3.textContent = year; root.appendChild(h3);
+    const grid = document.createElement("div"); grid.className="gallery-grid";
+    list.forEach(a => renderAlbum(grid, a));
+    root.appendChild(grid);
   });
-  root.appendChild(grid);
-});
+})();
+
+function renderAlbum(grid, album){
+  const card = document.createElement("div"); card.className="card"; card.style.overflow="hidden";
+  const imgWrap = document.createElement("div"); imgWrap.style.cssText="height:180px;overflow:hidden";
+  const img = document.createElement("img");
+  img.alt = album.title || "Album";
+  img.loading = "lazy";
+  img.style.cssText="width:100%;height:100%;object-fit:cover";
+  if(album.cover_image_path){
+    galleryService.getPublicUrl(album.cover_image_path).then(url => {
+      if(url) img.src = url; else setPlaceholder();
+    }).catch(()=> setPlaceholder());
+  } else {
+    setPlaceholder();
+  }
+  function setPlaceholder(){
+    img.src = "../assets/images/campus.jpg";
+    img.onerror = null;
+  }
+  imgWrap.appendChild(img);
+  const body = document.createElement("div"); body.className="card__body";
+  const title = document.createElement("div"); title.className="card__title"; title.textContent = album.title;
+  const meta = document.createElement("div"); meta.className="card__meta";
+  const span = document.createElement("span"); span.textContent = album._imageCount + " photos";
+  meta.appendChild(span); body.append(title, meta); card.append(imgWrap, body); grid.appendChild(card);
+}
 </script>
 </body>
 </html>

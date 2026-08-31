@@ -38,8 +38,21 @@ async function render(){
     const badge=document.createElement("span"); badge.className="badge " + (e.status==="published"?"badge--active":e.status==="draft"?"badge--expired":"badge--programmed"); badge.textContent=e.status;
     tdStatus.appendChild(badge);
     const tdAct=document.createElement("td");
-    const btn=document.createElement("button"); btn.className="btn btn--ghost btn--small"; btn.textContent="Supprimer";
-    btn.addEventListener("click", async()=>{ if(confirm("Supprimer cet événement ?")){ await eventService.deleteEvent(e.id); render(); }});
+const btn=document.createElement("button"); btn.className="btn btn--ghost btn--small"; btn.textContent="Supprimer";
+btn.disabled = false;
+btn.addEventListener("click", async()=>{ 
+  if(!btn.disabled && confirm("Supprimer cet événement ?")) {
+    btn.disabled = true;
+    try {
+      await eventService.deleteEvent(e.id);
+      render();
+    } catch(err) {
+      alert("Erreur lors de la suppression : " + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+});
     tdAct.appendChild(btn);
     tr.append(tdTitle, tdStart, tdEnd, tdStatus, tdAct);
     tbody.appendChild(tr);

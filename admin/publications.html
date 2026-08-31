@@ -55,7 +55,20 @@ async function render(){
     const tdExp=document.createElement("td"); tdExp.textContent=n.expires_at ? n.expires_at.slice(0,10) : "—";
     const tdAct=document.createElement("td");
     const btn=document.createElement("button"); btn.className="btn btn--ghost btn--small"; btn.textContent="Supprimer"; btn.dataset.del=n.id;
-    btn.addEventListener("click", async ()=>{ if(confirm("Supprimer ?")){ await newsService.deleteNews(n.id); render(); }});
+btn.disabled = false;
+btn.addEventListener("click", async ()=>{ 
+  if(!btn.disabled && confirm("Supprimer ?")) {
+    btn.disabled = true;
+    try {
+      await newsService.deleteNews(n.id);
+      render();
+    } catch(err) {
+      alert("Erreur lors de la suppression : " + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+});
     tdAct.appendChild(btn);
     tr.append(tdTitle, tdDate, tdStatus, tdExp, tdAct);
     tbody.appendChild(tr);
