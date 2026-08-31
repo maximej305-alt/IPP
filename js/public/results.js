@@ -1,23 +1,52 @@
 import { resultsService } from "../services/resultsService.js";
 import { Levels, Series } from "../config/app.config.js";
 
-// P2 — XSS: données élève toujours via textContent, structure via innerHTML statique uniquement
-export function initResultsPage(){
-  const state = resultsService.getState();
+// Phase 6.6.2.1 — Page publique branchée sur les données réelles (RPC search_student_result).
+// En mode réel (Supabase activé) : AUCUNE donnée fictive n'est affichée.
+// En mode mock (Supabase désactivé) : getPublicState() retourne {state:"empty"} → page vide.
+// XSS : toutes les données élèves/dynamiques sont rendues via textContent (jamais innerHTML).
+export async function initResultsPage(){
   const emptyEl = document.querySelector("[data-state-empty]");
   const scheduledEl = document.querySelector("[data-state-scheduled]");
   const availableEl = document.querySelector("[data-state-available]");
   const labelEl = document.querySelector("[data-session-label]");
-  if(labelEl) labelEl.textContent = resultsService.getSessionLabel();
-  if(emptyEl) emptyEl.hidden = state!=="empty";
-  if(scheduledEl) scheduledEl.hidden = state!=="scheduled";
-  if(availableEl) availableEl.hidden = state!=="available";
-  if(state==="scheduled") initCountdown();
-  if(state==="available") initSearch();
+
+  let publicState;
+  try{
+    publicState = await resultsService.getPublicState();
+  }catch(err){
+    // Erreur réseau/RPC → on bascule en état vide avec message, sans blocage.
+    setPageLabel(labelEl, "Résultats");
+    if(emptyEl) emptyEl.hidden = false;
+    if(scheduledEl) scheduledEl.hidden = true;
+    if(availableEl) availableEl.hidden = true;
+    const desc = emptyEl ? emptyEl.querySelector(".empty-state__desc") : null;
+    if(desc) desc.textContent = "Impossible de charger l'état des résultats pour le moment. Veuillez réessayer ultérieurement.";
+    return;
+  }
+
+  const state = publicState.state;
+  const sessionLabel = publicState.session || "Résultats";
+  setPageLabel(labelEl, sessionLabel);
+
+  if(emptyEl) emptyEl.hidden = state !== "empty";
+  if(scheduledEl) scheduledEl.hidden = state !== "scheduled";
+  if(availableEl) availableEl.hidden = state !== "available";
+
+  if(state === "scheduled"){
+    initCountdown(new Date(publicState.scheduledAt));
+  }
+  if(state === "available"){
+    initSearch(sessionLabel);
+  }
 }
 
-function initCountdown(){
-  const target = resultsService.getScheduledAt();
+function setPageLabel(el, text){
+  if(el) el.textContent = text;
+}
+
+function initCountdown(targetDate){
+  if(!(targetDate instanceof Date) || isNaN(targetDate.getTime())) return;
   const els = {
     d: document.querySelector("[data-cd-days]"),
     h: document.querySelector("[data-cd-hours]"),
@@ -25,7 +54,7 @@ function initCountdown(){
     s: document.querySelector("[data-cd-secs]"),
   };
   function tick(){
-    const diff = target - new Date();
+    const diff = targetDate - new Date();
     if(diff<=0){ els.d.textContent="00"; els.h.textContent="00"; els.m.textContent="00"; els.s.textContent="00"; return; }
     const s = Math.floor(diff/1000);
     const d = Math.floor(s/86400);
@@ -40,14 +69,14 @@ function initCountdown(){
   tick(); setInterval(tick,1000);
 }
 
-function initSearch(){
+function initSearch(sessionLabel){
   const levelSel = document.querySelector("[data-level]");
   const serieSel = document.querySelector("[data-serie]");
   const input = document.querySelector("[data-search-input]");
   const sugg = document.querySelector("[data-suggestions]");
   const btn = document.querySelector("[data-consult]");
+  const hint = document.querySelector("[data-search-hint]");
   const resultWrap = document.querySelector("[data-result]");
-  let selected = null;
 
   Levels.forEach(l=>{
     const o=document.createElement("option"); o.value=l; o.textContent=l; levelSel.appendChild(o);
@@ -55,26 +84,68 @@ function initSearch(){
   function populateSeries(){
     const lvl = levelSel.value;
     serieSel.innerHTML='<option value="">Choisir</option>';
-    (Series[lvl]||[]).forEach(s=>{
-      const o=document.createElement("option"); o.value=s; o.textContent=s; serieSel.appendChild(o);
+    (Series[lvl]||[]).forEach(serie=>{
+      const o=document.createElement("option"); o.value=serie; o.textContent=serie; serieSel.appendChild(o);
     });
   }
-  levelSel.addEventListener("change", ()=>{ populateSeries(); selected=null; if(sugg) sugg.classList.remove("is-open"); resultWrap.hidden=true; });
+  levelSel.addEventListener("change", ()=>{ populateSeries(); if(sugg) sugg.classList.remove("is-open"); resultWrap.hidden=true; });
   populateSeries();
-  serieSel.addEventListener("change", ()=>{ selected=null; if(sugg) sugg.classList.remove("is-open"); resultWrap.hidden=true; });
+  serieSel.addEventListener("change", ()=>{ if(sugg) sugg.classList.remove("is-open"); resultWrap.hidden=true; });
 
   let debounce;
   input.addEventListener("input", ()=>{
     clearTimeout(debounce);
     const q = input.value.trim();
-    if(q.length<2){ sugg.classList.remove("is-open"); selected=null; return; }
+    if(q.length < 2){ sugg.classList.remove("is-open"); setHint(hint, "Tapez au moins 2 lettres pour rechercher."); return; }
+    setHint(hint, "");
     debounce=setTimeout(async()=>{
-      const results = await resultsService.search({ level: levelSel.value, serie: serieSel.value, query: q });
-      renderSugg(results);
+      await runSearch(false);
     },180);
   });
 
+  async function runSearch(isExact){
+    const level = levelSel.value;
+    const serie = serieSel.value;
+    const q = input.value.trim();
+    if(!level || !serie){
+      setHint(hint, "Veuillez sélectionner votre niveau et votre série.");
+      return;
+    }
+    if(q.length < 2){
+      renderSugg([]);
+      return;
+    }
+    setSearchLoading(true);
+    try{
+      const list = await resultsService.searchStudentResult({ level, className: serie, studentName: q });
+      setSearchLoading(false);
+      if(isExact){
+        // Recherche "consulter" sans sélection : on prend le premier résultat réel exact,
+        // sinon aucun résultat trouvé.
+        const exact = list.find(r => r.name.toLowerCase() === q.toLowerCase()) || list[0] || null;
+        if(!exact){
+          resultWrap.hidden=false;
+          // Message statique — aucune donnée utilisateur interpolée
+          resultWrap.innerHTML='<div class="alert">Aucun élève trouvé pour ces critères. Vérifiez l’orthographe ou la classe.</div>';
+          return;
+        }
+        showResultSafe(exact, sessionLabel);
+      } else {
+        renderSugg(list);
+      }
+    }catch(err){
+      setSearchLoading(false);
+      showError(resultWrap, "Une erreur est survenue lors de la recherche. Veuillez réessayer.");
+    }
+  }
+
+  btn.addEventListener("click", async ()=>{
+    if(btn.disabled) return;
+    runSearch(true);
+  });
+
   function renderSugg(list){
+    if(!sugg) return;
     sugg.innerHTML="";
     if(list.length===0){
       const d=document.createElement("div");
@@ -90,8 +161,8 @@ function initSearch(){
       div.textContent = `${r.name} — ${r.level} ${r.serie}`;
       div.addEventListener("click", ()=>{
         input.value = r.name;
-        selected = r;
         sugg.classList.remove("is-open");
+        showResultSafe(r, sessionLabel);
       });
       sugg.appendChild(div);
     });
@@ -99,30 +170,39 @@ function initSearch(){
   }
 
   document.addEventListener("click",(e)=>{
-    if(!e.target.closest("[data-search-wrap]")) sugg.classList.remove("is-open");
+    if(!e.target.closest("[data-search-wrap]")) if(sugg) sugg.classList.remove("is-open");
   });
 
-  btn.addEventListener("click", async ()=>{
-    if(!selected){
-      const q = input.value.trim();
-      if(!q) return;
-      const found = await resultsService.getByExactName(q, levelSel.value, serieSel.value);
-      if(!found){
-        resultWrap.hidden=false;
-        // message statique, pas de données utilisateur
-        resultWrap.innerHTML='<div class="alert">Aucun élève trouvé pour ces critères. Vérifiez l’orthographe ou la classe.</div>';
-        return;
-      }
-      selected = found;
-    }
-    showResultSafe(selected);
-  });
+  function setSearchLoading(loading){
+    if(!btn) return;
+    const original = btn.dataset.originalText || "Consulter mon résultat";
+    if(!btn.dataset.originalText) btn.dataset.originalText = original;
+    btn.disabled = loading;
+    btn.textContent = loading ? "Recherche..." : original;
+  }
 
-  function showResultSafe(r){
-    const isAdmis = String(r.decision).toUpperCase().includes("ADMIS");
+  function setHint(el, text){
+    if(el) el.textContent = text;
+  }
+
+  function showError(wrap, message){
+    if(!wrap) return;
+    wrap.hidden=false;
+    wrap.innerHTML = "";
+    const d=document.createElement("div");
+    d.className="alert alert--danger";
+    d.textContent = message;
+    wrap.appendChild(d);
+  }
+
+  function showResultSafe(r, session){
+    const isAdmis = String(r.decision||"").toUpperCase().includes("ADMIS");
+    const rank = (r.rank != null && r.rank !== "") ? r.rank : "—";
+    const total = (r.total != null && r.total !== "") ? r.total : "—";
+    const average = (r.average != null && r.average !== "") ? r.average : "—";
+    const sessLabel = session || (r.session ? r.session : "Résultats");
     resultWrap.hidden=false;
     resultWrap.innerHTML = "";
-    // Structure statique via innerHTML (sans données)
     const wrapper = document.createElement("div");
     wrapper.innerHTML = `
       <div class="gov-result ${isAdmis ? "gov-result--admis" : "gov-result--echoue"}" style="position:relative">
@@ -155,12 +235,12 @@ function initSearch(){
       </div>`;
     const root = wrapper.firstElementChild;
     // Injection sécurisée via textContent
-    root.querySelector("[data-session]").textContent = r.session + " — 2026";
+    root.querySelector("[data-session]").textContent = sessLabel + " — 2026";
     root.querySelector("[data-name]").textContent = r.name;
-    root.querySelector("[data-class]").textContent = `${r.level} ${r.serie} — N° ${r.rank}/${r.total}`;
-    root.querySelector("[data-average]").textContent = `${r.average} / 20`;
-    root.querySelector("[data-rank]").textContent = `${r.rank} / ${r.total}`;
-    root.querySelector("[data-classe]").textContent = `${r.level} ${r.serie}`;
+    root.querySelector("[data-class]").textContent = `${r.level || ""} ${r.serie || ""} — N° ${rank}/${total}`;
+    root.querySelector("[data-average]").textContent = `${average} / 20`;
+    root.querySelector("[data-rank]").textContent = `${rank} / ${total}`;
+    root.querySelector("[data-classe]").textContent = `${r.level || ""} ${r.serie || ""}`;
     root.querySelector("[data-date]").textContent = new Date().toLocaleDateString("fr-FR");
     const badgeEl = root.querySelector("[data-badge]");
     const noteEl = root.querySelector("[data-note]");
