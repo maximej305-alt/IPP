@@ -49,8 +49,8 @@ jobs:
             sed -i 's|href="../js/|href="js/|g' "$f"
             sed -i 's|href="../assets/|href="assets/|g' "$f"
             sed -i 's|src="../js/|src="js/|g' "$f"
-            sed -i 's|from "../js/|from "js/|g' "$f"
-            sed -i 's|from '\''../js/|from '\''js/|g' "$f"
+            sed -i 's|from "../js/|from "./js/|g' "$f"
+            sed -i 's|from '\''../js/|from '\''./js/|g' "$f"
             sed -i 's|href="../index.html|href="/IPP/"|g' "$f"
             sed -i 's|href="../public/|href="/IPP/public/|g' "$f"
           done
