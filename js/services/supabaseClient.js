@@ -12,8 +12,19 @@ export async function getSupabaseClient(){
     return null; // Mode MOCK — aucun appel réseau
   }
   if(client) return client;
-  // Import dynamique pour ne pas charger le SDK en mode mock (économise plan gratuit)
-  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+  // Import dynamique avec fallback (cdn.jsdelivr → esm.sh) + timeout
+  let createClient;
+  try{
+    const mod = await Promise.race([
+      import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"),
+      new Promise((_,rej)=> setTimeout(()=>rej(new Error("timeout cdn.jsdelivr")), 5000))
+    ]);
+    createClient = mod.createClient;
+  }catch(e1){
+    console.warn("supabase cdn.jsdelivr failed, fallback esm.sh", e1.message);
+    const mod2 = await import("https://esm.sh/@supabase/supabase-js@2");
+    createClient = mod2.createClient;
+  }
   client = createClient(AppConfig.supabase.url, AppConfig.supabase.anonKey);
   return client;
 }
