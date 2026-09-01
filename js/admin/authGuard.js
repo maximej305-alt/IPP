@@ -3,40 +3,59 @@
 // Utilisé par adminLayout.initAdmin, exposé séparément pour audit P1.
 import { authService } from "../services/authService.js";
 
+const CACHE_KEY="ipp_admin_profile"; const CACHE_TTL=5*60*1000;
+function getCachedProfile(){
+  try{
+    const raw=sessionStorage.getItem(CACHE_KEY);
+    if(!raw) return null;
+    const {profile, ts}=JSON.parse(raw);
+    if(Date.now()-ts > CACHE_TTL) return null;
+    return profile;
+  }catch{ return null; }
+}
+function setCachedProfile(p){ try{ sessionStorage.setItem(CACHE_KEY, JSON.stringify({profile:p, ts:Date.now()})); }catch{} }
+
 export async function requireAdminSession({ requiredRole } = {}){
-  // Masque layout immédiatement (évite flash)
   const layout = document.querySelector(".admin-layout");
-  if(layout) layout.style.visibility = "hidden";
-  // Retry 3x pour laisser Supabase restaurer session depuis localStorage (GH Pages)
-  let lastErr;
-  for(let i=0;i<3;i++){
-    try{
-      const { profile } = await authService.requireAuth();
-      if(requiredRole){
-        const ok = await authService.hasRole(requiredRole);
-        if(!ok){
-          alert(`Accès refusé : rôle insuffisant (${profile?.role} < ${requiredRole})`);
-          location.href = "dashboard.html";
-          throw new Error("role insuffisant");
-        }
-      }
-      if(layout) layout.style.visibility = "";
-      return profile;
-    }catch(e){
-      lastErr = e;
-      // Si c'est une redirection déjà, ne pas retry
-      if(e && e.message && e.message.includes("Non authentifié")) {
-        if(i<2) await new Promise(r=>setTimeout(r, 400));
-        else throw e;
-      } else if(e && e.message && e.message.includes("Profil manquant")){
-        throw e;
-      } else {
-        // Autre erreur (réseau), retry
-        if(i<2) await new Promise(r=>setTimeout(r, 400));
+  const cached = getCachedProfile();
+  // Affichage immédiat avec cache (fluide) — validation en arrière-plan
+  if(cached){
+    if(layout) layout.style.visibility = "";
+    // Vérif rôle cache rapide
+    if(requiredRole){
+      const hierarchy={editor:1,admin:2,super_admin:3};
+      if((hierarchy[cached.role]||0) < (hierarchy[requiredRole]||0)){
+        alert(`Accès refusé : rôle insuffisant (${cached.role} < ${requiredRole})`);
+        location.href="dashboard.html"; throw new Error("role insuffisant");
       }
     }
+    // Revalidation async sans bloquer
+    authService.requireAuth().then(({profile})=>{
+      setCachedProfile(profile);
+      if(requiredRole) authService.hasRole(requiredRole).then(ok=>{
+        if(!ok){ alert(`Accès refusé : rôle insuffisant (${profile?.role} < ${requiredRole})`); location.href="dashboard.html"; }
+      });
+    }).catch(()=>{ sessionStorage.removeItem(CACHE_KEY); });
+    return cached;
   }
-  throw lastErr;
+  // Pas de cache → masque et attend réseau (1 seule tentative rapide)
+  if(layout) layout.style.visibility = "hidden";
+  try{
+    const { profile } = await authService.requireAuth();
+    setCachedProfile(profile);
+    if(requiredRole){
+      const ok = await authService.hasRole(requiredRole);
+      if(!ok){
+        alert(`Accès refusé : rôle insuffisant (${profile?.role} < ${requiredRole})`);
+        location.href = "dashboard.html"; throw new Error("role insuffisant");
+      }
+    }
+    if(layout) layout.style.visibility = "";
+    return profile;
+  }catch(e){
+    if(layout) layout.style.visibility = "";
+    throw e;
+  }
 }
 
 // Guard pour login.html : si déjà connecté → dashboard

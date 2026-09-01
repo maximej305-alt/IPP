@@ -41,4 +41,14 @@ export async function initAdmin({ active, requiredRole }){
       document.querySelectorAll('[id$="-modal"]:not([hidden]), #modal:not([hidden]), #create-modal:not([hidden]), #manage-modal:not([hidden]), #confirm-modal:not([hidden]), #doc-modal:not([hidden]), #pub-modal:not([hidden])').forEach(m=> m.hidden=true);
     }
   });
+
+  // Fluidité : prefetch des pages admin + transition douce
+  document.querySelectorAll(".admin-nav__link[href$='.html']").forEach(a=>{
+    const l=document.createElement("link"); l.rel="prefetch"; l.href=a.getAttribute("href"); l.as="document"; document.head.appendChild(l);
+    // Précharge au survol
+    a.addEventListener("mouseenter", ()=>{ fetch(a.href, {method:"GET", cache:"force-cache"}).catch(()=>{}); }, {once:true});
+  });
+  // Transition fluide du contenu
+  const content=document.querySelector(".admin-content");
+  if(content){ content.style.opacity="0"; content.style.transition="opacity 120ms ease"; requestAnimationFrame(()=> content.style.opacity="1"); }
 }

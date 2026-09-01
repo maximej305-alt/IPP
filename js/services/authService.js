@@ -33,9 +33,10 @@ export const authService = {
   },
 
   async logout(){
+    try{ sessionStorage.removeItem("ipp_admin_profile"); }catch{}
+    try{ localStorage.removeItem("ipp_admin_profile"); }catch{}
     const supabase = await getClient();
     await supabase.auth.signOut();
-    // Supabase nettoie localStorage automatiquement
     location.href = "login.html";
   },
 
