@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+<head><base href="/IPP/"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Journal — IPP</title>
+<link rel="stylesheet" href="css/variables.css"><link rel="stylesheet" href="css/global.css"><link rel="stylesheet" href="css/admin.css"><link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <aside class="admin-sidebar" data-admin-sidebar><div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div></div></div>
+  <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a></nav>
+  <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
+  <div class="admin-main">
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Journal d'activité</div></div></div>
+    <div class="admin-content">
+      <div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Statut</th></tr></thead><tbody>
+        <tr><td>28/08/2026 10:21</td><td>Admin 01</td><td>Publication créée — "Composition du premier trimestre"</td><td><span class="badge badge--active">actif</span></td></tr>
+        <tr><td>28/08/2026 09:45</td><td>Admin 02</td><td>Résultat programmé — Terminale F2, 2ᵉ trimestre</td><td><span class="badge badge--programmed">programmé</span></td></tr>
+        <tr><td>29/08/2026 08:10</td><td>Admin 01</td><td>Document supprimé — Ancien règlement</td><td><span class="badge badge--expired">expiré</span></td></tr>
+        <tr><td>27/08/2026 16:00</td><td>Super Admin</td><td>Galerie mise à jour — Semaine technique (12 photos)</td><td><span class="badge badge--active">actif</span></td></tr>
+      </tbody></table></div>
+      <div class="alert alert--info" style="margin-top:16px">Journal d'activité : la table d'historique existe en base mais est actuellement vide. Cette fonctionnalité sera configurée dans une phase dédiée.</div>
+    </div>
+  </div>
+</div>
+<script type="module">import {initAdmin} from "js/admin/adminLayout.js"; initAdmin({active:"activity"});</script>
+</body>
+</html>

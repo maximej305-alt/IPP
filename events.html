@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fr">
+<head><base href="/IPP/"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Événements — IPP</title>
+<link rel="stylesheet" href="css/variables.css"><link rel="stylesheet" href="css/global.css"><link rel="stylesheet" href="css/admin.css"><link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <aside class="admin-sidebar" data-admin-sidebar><div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div></div></div>
+  <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a><a class="admin-nav__link" data-admin-nav="documents" href="documents.html">⬙ Documents</a><a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html">◎ Galerie</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a></nav>
+  <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
+  <div class="admin-main">
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Événements</div></div><button class="btn btn--primary btn--small" data-open>Créer</button></div>
+    <div class="admin-content">
+      <div class="table-wrap"><table class="table"><thead><tr><th>Nom</th><th>Début</th><th>Fin</th><th>Statut</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div>
+      <div id="modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.4);display:grid;place-items:center;padding:16px;z-index:60"><div class="card" style="width:100%;max-width:520px"><div class="card__body"><h3>Nouvel événement</h3><form id="form" style="margin-top:12px"><div class="form-group"><label class="form-label">Nom</label><input class="form-input" name="title" required></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" name="description" rows="3"></textarea></div><div class="form-row"><div class="form-group"><label class="form-label">Début</label><input class="form-input" type="date" name="start" required></div><div class="form-group"><label class="form-label">Fin</label><input class="form-input" type="date" name="end"></div></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn--secondary btn--small" type="button" data-close>Annuler</button><button class="btn btn--primary btn--small" type="submit">Créer</button></div></form></div></div></div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import {initAdmin} from "js/admin/adminLayout.js";
+import {eventService} from "js/services/eventService.js";
+await initAdmin({active:"events", requiredRole:"editor"});
+const tbody=document.getElementById("tbody");
+async function render(){
+  const list=await eventService.getAdminEvents();
+  tbody.innerHTML="";
+  if(list.length===0){
+    const tr=document.createElement("tr");
+    const td=document.createElement("td"); td.colSpan=5; td.textContent="Aucun événement"; td.style.cssText="text-align:center;color:var(--ipp-text-muted);padding:20px";
+    tr.appendChild(td); tbody.appendChild(tr); return;
+  }
+  list.forEach(e=>{
+    const tr=document.createElement("tr");
+    const tdTitle=document.createElement("td"); tdTitle.className="table__title"; tdTitle.textContent=e.title;
+    const tdStart=document.createElement("td"); tdStart.textContent=e.event_date || e.start;
+    const tdEnd=document.createElement("td"); tdEnd.textContent=e.end_date || e.end || e.event_date || e.start;
+    const tdStatus=document.createElement("td");
+    const badge=document.createElement("span"); badge.className="badge " + (e.status==="published"?"badge--active":e.status==="draft"?"badge--expired":"badge--programmed"); badge.textContent=e.status;
+    tdStatus.appendChild(badge);
+    const tdAct=document.createElement("td");
+const btn=document.createElement("button"); btn.className="btn btn--ghost btn--small"; btn.textContent="Supprimer";
+btn.disabled = false;
+btn.addEventListener("click", async()=>{ 
+  if(!btn.disabled && confirm("Supprimer cet événement ?")) {
+    btn.disabled = true;
+    try {
+      await eventService.deleteEvent(e.id);
+      render();
+    } catch(err) {
+      alert("Erreur lors de la suppression : " + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+});
+    tdAct.appendChild(btn);
+    tr.append(tdTitle, tdStart, tdEnd, tdStatus, tdAct);
+    tbody.appendChild(tr);
+  });
+}
+await render();
+const m=document.getElementById("modal"); document.querySelector("[data-open]").addEventListener("click",()=>m.hidden=false); document.querySelector("[data-close]").addEventListener("click",()=>m.hidden=true); m.addEventListener("click",e=>{if(e.target===m)m.hidden=true;});
+document.getElementById("form").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target);
+  const title=(fd.get("title")||"").toString().trim();
+  const description=(fd.get("description")||"").toString().trim();
+  const start=(fd.get("start")||"").toString();
+  const end=(fd.get("end")||"").toString() || start;
+  if(!title || !start){ alert("Titre et date de début obligatoires"); return; }
+  if(end && end < start){ alert("La date de fin doit être après la date de début"); return; }
+  try{
+    await eventService.createEvent({title, description, event_date:start, end_date:end, status:"published"});
+    m.hidden=true; e.target.reset(); await render();
+  }catch(err){ alert(err.message); console.error(err); }
+});
+</script>
+</body>
+</html>

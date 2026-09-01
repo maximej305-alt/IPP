@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="fr">
+<head><base href="/IPP/"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Publications — IPP</title>
+<link rel="stylesheet" href="css/variables.css"><link rel="stylesheet" href="css/global.css"><link rel="stylesheet" href="css/admin.css"><link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <aside class="admin-sidebar" data-admin-sidebar>
+    <div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div><div class="admin-sidebar__sub">Publications</div></div></div>
+    <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a><a class="admin-nav__link" data-admin-nav="documents" href="documents.html">⬙ Documents</a><a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html">◎ Galerie</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a></nav>
+    <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div>
+  </aside>
+  <div class="admin-main">
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Publications</div></div><button class="btn btn--primary btn--small" data-open-modal>Créer une publication</button></div>
+    <div class="admin-content">
+      <div class="table-wrap"><table class="table"><thead><tr><th>Titre</th><th>Date</th><th>Statut</th><th>Expiration</th><th></th></tr></thead><tbody id="pub-tbody"></tbody></table></div>
+
+      <!-- Modal mock -->
+      <div id="pub-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.4);display:grid;place-items:center;padding:16px;z-index:60">
+        <div class="card" style="width:100%;max-width:560px">
+          <div class="card__body">
+            <h3>Nouvelle publication</h3>
+            <form id="pub-form" style="margin-top:12px">
+              <div class="form-group"><label class="form-label">Titre</label><input class="form-input" name="title" required></div>
+              <div class="form-group"><label class="form-label">Contenu</label><textarea class="form-textarea" name="content" rows="4" required></textarea></div>
+              <div class="form-row"><div class="form-group"><label class="form-label">Date de publication</label><input class="form-input" type="date" name="date" required></div><div class="form-group"><label class="form-label">Expiration (facultatif)</label><input class="form-input" type="date" name="expiresAt"></div></div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn btn--secondary btn--small" type="button" data-close-modal>Annuler</button><button class="btn btn--secondary btn--small" type="submit" data-action="draft">Enregistrer brouillon</button><button class="btn btn--primary btn--small" type="submit" data-action="publish">Publier</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import {initAdmin} from "js/admin/adminLayout.js";
+import {newsService} from "js/services/newsService.js";
+await initAdmin({active:"publications", requiredRole:"editor"});
+const tbody=document.getElementById("pub-tbody");
+async function render(){
+  const list= await newsService.getAdminNews();
+  tbody.innerHTML="";
+  if(list.length===0){
+    const tr=document.createElement("tr");
+    const td=document.createElement("td"); td.colSpan=5; td.textContent="Aucune publication"; td.style.cssText="text-align:center;color:var(--ipp-text-muted);padding:20px";
+    tr.appendChild(td); tbody.appendChild(tr); return;
+  }
+  list.forEach(n=>{
+    const tr=document.createElement("tr");
+    const tdTitle=document.createElement("td"); tdTitle.className="table__title"; tdTitle.textContent=n.title;
+    const tdDate=document.createElement("td"); tdDate.textContent=n.date|| (n.published_at? n.published_at.slice(0,10): "—");
+    const tdStatus=document.createElement("td");
+    const badge=document.createElement("span"); badge.className="badge " + (n.status==="published"?"badge--active":n.status==="scheduled"?"badge--programmed":"badge--expired"); badge.textContent=n.status;
+    tdStatus.appendChild(badge);
+    const tdExp=document.createElement("td"); tdExp.textContent=n.expires_at ? n.expires_at.slice(0,10) : "—";
+    const tdAct=document.createElement("td");
+    const btn=document.createElement("button"); btn.className="btn btn--ghost btn--small"; btn.textContent="Supprimer"; btn.dataset.del=n.id;
+btn.disabled = false;
+btn.addEventListener("click", async ()=>{ 
+  if(!btn.disabled && confirm("Supprimer ?")) {
+    btn.disabled = true;
+    try {
+      await newsService.deleteNews(n.id);
+      render();
+    } catch(err) {
+      alert("Erreur lors de la suppression : " + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+});
+    tdAct.appendChild(btn);
+    tr.append(tdTitle, tdDate, tdStatus, tdExp, tdAct);
+    tbody.appendChild(tr);
+  });
+}
+await render();
+const modal=document.getElementById("pub-modal");
+document.querySelector("[data-open-modal]").addEventListener("click", ()=> modal.hidden=false);
+document.querySelector("[data-close-modal]").addEventListener("click", ()=> modal.hidden=true);
+modal.addEventListener("click", (e)=>{ if(e.target===modal) modal.hidden=true; });
+let pendingAction = "draft";
+document.querySelector('[data-action="draft"]')?.addEventListener("click", ()=> pendingAction="draft");
+document.querySelector('[data-action="publish"]')?.addEventListener("click", ()=> pendingAction="published");
+document.getElementById("pub-form").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const fd=new FormData(e.target);
+  const title=(fd.get("title")||"").toString().trim();
+  const content=(fd.get("content")||"").toString().trim();
+  const dateStr=(fd.get("date")||"").toString();
+  const expiresStr=(fd.get("expiresAt")||"").toString();
+  if(!title || !content){ alert("Titre et contenu obligatoires"); return; }
+  const payload={
+    title,
+    excerpt: content.slice(0,120),
+    content,
+    status: pendingAction==="published" ? "published" : "draft",
+    published_at: pendingAction==="published" ? (dateStr? new Date(dateStr).toISOString(): new Date().toISOString()) : (dateStr? new Date(dateStr).toISOString(): null),
+    expires_at: expiresStr ? new Date(expiresStr).toISOString() : null
+  };
+  try{
+    await newsService.createNews(payload);
+    modal.hidden=true; e.target.reset(); await render();
+  }catch(err){ alert(err.message); console.error(err); }
+});
+</script>
+</body>
+</html>

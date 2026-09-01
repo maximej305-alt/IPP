@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head><base href="/IPP/"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Dashboard — IPP</title>
+<link rel="stylesheet" href="css/variables.css"><link rel="stylesheet" href="css/global.css"><link rel="stylesheet" href="css/admin.css"><link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <aside class="admin-sidebar" data-admin-sidebar>
+    <div class="admin-sidebar__brand"><div class="admin-sidebar__mark">IPP</div><div><div class="admin-sidebar__title">IPP ADMIN</div><div class="admin-sidebar__sub">Institut Polytechnique LA PAIX</div></div></div>
+    <nav class="admin-nav">
+      <div class="admin-nav__label">Général</div>
+      <a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html"><span class="admin-nav__icon">▦</span> Dashboard</a>
+      <div class="admin-nav__label">Contenus</div>
+      <a class="admin-nav__link" data-admin-nav="publications" href="publications.html"><span class="admin-nav__icon">◫</span> Publications</a>
+      <a class="admin-nav__link" data-admin-nav="events" href="events.html"><span class="admin-nav__icon">▣</span> Événements</a>
+      <a class="admin-nav__link" data-admin-nav="results" href="results.html"><span class="admin-nav__icon">✦</span> Résultats</a>
+      <a class="admin-nav__link" data-admin-nav="documents" href="documents.html"><span class="admin-nav__icon">⬙</span> Documents</a>
+      <a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html"><span class="admin-nav__icon">◎</span> Galerie</a>
+      <div class="admin-nav__label">Système</div>
+      <a class="admin-nav__link" data-admin-nav="users" href="users.html"><span class="admin-nav__icon">◐</span> Utilisateurs</a>
+      <a class="admin-nav__link" data-admin-nav="activity" href="activity.html"><span class="admin-nav__icon">≡</span> Journal</a>
+    </nav>
+    <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout><span class="admin-nav__icon">↪</span> Déconnexion</a></div>
+  </aside>
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Dashboard</div></div>
+      <div class="admin-topbar__actions"><span style="font-size:13px;color:var(--ipp-text-muted)">Bonjour, <strong data-admin-name>Administrateur</strong></span><a class="btn btn--secondary btn--small" href="/IPP/"">Voir le site</a></div>
+    </div>
+    <div class="admin-content">
+      <p class="text-small text-muted">Vue d'ensemble — données Supabase en temps réel.</p>
+      <div class="stat-grid" style="margin-top:16px">
+        <div class="stat-card"><div class="stat-card__label">Publications actives</div><div class="stat-card__value">04</div><div class="stat-card__hint">dont 1 expirant bientôt</div></div>
+        <div class="stat-card"><div class="stat-card__label">Événements à venir</div><div class="stat-card__value">02</div><div class="stat-card__hint">prochain : 28 août</div></div>
+        <div class="stat-card"><div class="stat-card__label">Résultats publiés</div><div class="stat-card__value">01</div><div class="stat-card__hint">Terminale F2 — 2ᵉ trimestre</div></div>
+        <div class="stat-card"><div class="stat-card__label">Stockage utilisé</div><div class="stat-card__value" style="font-size:18px;margin-top:6px">—</div><div class="stat-card__hint">Calcul réel après Supabase</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.4fr 0.8fr;gap:16px" class="hero__grid">
+        <div class="card"><div class="card__body"><h3>Activité récente</h3>
+          <div style="display:grid;gap:10px;margin-top:12px;font-size:13px">
+            <div style="display:flex;justify-content:space-between;gap:12px"><span>• Résultats Terminale F2 programmés</span><span class="text-muted">28/08</span></div>
+            <div style="display:flex;justify-content:space-between;gap:12px"><span>• Nouvelle actualité publiée</span><span class="text-muted">28/08</span></div>
+            <div style="display:flex;justify-content:space-between;gap:12px"><span>• Galerie mise à jour</span><span class="text-muted">27/08</span></div>
+          </div>
+        </div></div>
+        <div class="card"><div class="card__body"><h3>États des contenus</h3><div style="display:grid;gap:8px;margin-top:10px;font-size:13px">
+          <div style="display:flex;justify-content:space-between"><span>Actif</span><span class="badge badge--active">04</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Programmé</span><span class="badge badge--programmed">01</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Expiré</span><span class="badge badge--expired">02</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Archivé</span><span class="badge badge--archived">03</span></div>
+        </div><div class="alert alert--info" style="margin-top:12px;font-size:12px">La logique réelle de suppression automatique sera côté Supabase (cron/Edge Function).</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">import {initAdmin} from "js/admin/adminLayout.js"; initAdmin({active:"dashboard"});</script>
+</body>
+</html>

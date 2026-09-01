@@ -1,0 +1,62 @@
+:root {
+  /* IPP — Institutionnelle + nette */
+  --ipp-navy: #0e2742;
+  --ipp-navy-700: #122e4d;
+  --ipp-navy-600: #1a3a5c;
+  --ipp-blue: #1b4f7a;
+  --ipp-blue-hover: #143a5a;
+  --ipp-blue-accent: #256090;
+  --ipp-blue-light: #eef2f7;
+  --ipp-blue-lighter: #f4f7fb;
+
+  --ipp-bg: #ffffff;
+  --ipp-bg-alt: #f6f8fb;
+  --ipp-bg-muted: #eef2f7;
+
+  --ipp-text: #142132;
+  --ipp-text-secondary: #4a5d78;
+  --ipp-text-muted: #6b7e98;
+  --ipp-text-inverse: #ffffff;
+
+  --ipp-border: #d9e2f0;
+  --ipp-border-strong: #bdccde;
+  --ipp-border-light: #edf1f6;
+
+  --ipp-success: #0f6848;
+  --ipp-success-bg: #e6f4ef;
+  --ipp-warning: #854d0e;
+  --ipp-warning-bg: #fef3c7;
+  --ipp-danger: #991b1b;
+  --ipp-danger-bg: #fee2e2;
+  --ipp-info-bg: #eaf2fb;
+
+  /* Typo — plus nette */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: "Fraunces", "IBM Plex Serif", Georgia, serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.5rem;
+
+  /* Layout — plus aéré */
+  --header-height: 68px;
+  --container-max: 1160px;
+  --container-pad: 24px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgba(14,39,66,0.05), 0 1px 3px rgba(14,39,66,0.07);
+  --shadow-md: 0 6px 20px rgba(14,39,66,0.08), 0 1px 4px rgba(14,39,66,0.06);
+  --shadow-lg: 0 12px 36px rgba(14,39,66,0.11), 0 2px 10px rgba(14,39,66,0.06);
+  --shadow-card: 0 1px 3px rgba(14,39,66,0.06);
+
+  --transition: 180ms cubic-bezier(.2,.8,.2,1);
+  --transition-slow: 480ms cubic-bezier(.16,1,.3,1);
+  --ease-out: cubic-bezier(.16,1,.3,1);
+}
