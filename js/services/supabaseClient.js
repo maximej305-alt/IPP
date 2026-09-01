@@ -27,7 +27,7 @@ export async function getSupabaseClient(){
         s.dataset.supabase="1"; s.async=true;
         s.onload=()=>resolve(); s.onerror=()=>reject(new Error("local vendor failed"));
         document.head.appendChild(s);
-        setTimeout(()=>reject(new Error("timeout local vendor")), 4000);
+        setTimeout(()=>reject(new Error("timeout local vendor")), 10000);
       });
       if(window.supabase && window.supabase.createClient) createClient = window.supabase.createClient;
       else throw new Error("local vendor no createClient");
