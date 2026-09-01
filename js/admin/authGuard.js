@@ -7,22 +7,36 @@ export async function requireAdminSession({ requiredRole } = {}){
   // Masque layout immédiatement (évite flash)
   const layout = document.querySelector(".admin-layout");
   if(layout) layout.style.visibility = "hidden";
-  try{
-    const { profile } = await authService.requireAuth(); // redirect login si null
-    if(requiredRole){
-      const ok = await authService.hasRole(requiredRole);
-      if(!ok){
-        alert(`Accès refusé : rôle insuffisant (${profile?.role} < ${requiredRole})`);
-        location.href = "dashboard.html";
-        throw new Error("role insuffisant");
+  // Retry 3x pour laisser Supabase restaurer session depuis localStorage (GH Pages)
+  let lastErr;
+  for(let i=0;i<3;i++){
+    try{
+      const { profile } = await authService.requireAuth();
+      if(requiredRole){
+        const ok = await authService.hasRole(requiredRole);
+        if(!ok){
+          alert(`Accès refusé : rôle insuffisant (${profile?.role} < ${requiredRole})`);
+          location.href = "dashboard.html";
+          throw new Error("role insuffisant");
+        }
+      }
+      if(layout) layout.style.visibility = "";
+      return profile;
+    }catch(e){
+      lastErr = e;
+      // Si c'est une redirection déjà, ne pas retry
+      if(e && e.message && e.message.includes("Non authentifié")) {
+        if(i<2) await new Promise(r=>setTimeout(r, 400));
+        else throw e;
+      } else if(e && e.message && e.message.includes("Profil manquant")){
+        throw e;
+      } else {
+        // Autre erreur (réseau), retry
+        if(i<2) await new Promise(r=>setTimeout(r, 400));
       }
     }
-    if(layout) layout.style.visibility = "";
-    return profile;
-  }catch(e){
-    // requireAuth a déjà redirigé vers login.html
-    throw e;
   }
+  throw lastErr;
 }
 
 // Guard pour login.html : si déjà connecté → dashboard
