@@ -34,7 +34,7 @@ jobs:
           rm -rf deploy
           mkdir -p deploy/css deploy/js deploy/assets
           cp -r css/* deploy/css/
-          cp -r js deploy/js
+          cp -r js/* deploy/js/
           # copy assets if exists
           if [ -d "assets" ]; then cp -r assets/* deploy/assets/ 2>/dev/null || true; fi
           # copy admin files to root of deploy (so /admin/dashboard.html becomes /dashboard.html on gh-pages)
