@@ -30,9 +30,9 @@
     <div class="admin-content">
       <p class="text-small text-muted">Vue d'ensemble — données Supabase en temps réel.</p>
       <div class="stat-grid" style="margin-top:16px">
-        <div class="stat-card"><div class="stat-card__label">Publications actives</div><div class="stat-card__value">04</div><div class="stat-card__hint">dont 1 expirant bientôt</div></div>
-        <div class="stat-card"><div class="stat-card__label">Événements à venir</div><div class="stat-card__value">02</div><div class="stat-card__hint">prochain : 28 août</div></div>
-        <div class="stat-card"><div class="stat-card__label">Résultats publiés</div><div class="stat-card__value">01</div><div class="stat-card__hint">Terminale F2 — 2ᵉ trimestre</div></div>
+        <div class="stat-card"><div class="stat-card__label">Publications actives</div><div class="stat-card__value" id="stat-pub">—</div><div class="stat-card__hint" id="stat-pub-hint">Chargement...</div></div>
+        <div class="stat-card"><div class="stat-card__label">Événements à venir</div><div class="stat-card__value" id="stat-evt">—</div><div class="stat-card__hint" id="stat-evt-hint">Chargement...</div></div>
+        <div class="stat-card"><div class="stat-card__label">Résultats publiés</div><div class="stat-card__value" id="stat-res">—</div><div class="stat-card__hint" id="stat-res-hint">Chargement...</div></div>
         <div class="stat-card"><div class="stat-card__label">Stockage utilisé</div><div class="stat-card__value" style="font-size:18px;margin-top:6px">—</div><div class="stat-card__hint">Calcul réel après Supabase</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1.4fr 0.8fr;gap:16px" class="hero__grid">
@@ -53,6 +53,33 @@
     </div>
   </div>
 </div>
-<script type="module">import {initAdmin} from "../js/admin/adminLayout.js"; await initAdmin({active:"dashboard"});</script>
+<script type="module">
+import {initAdmin} from "../js/admin/adminLayout.js";
+await initAdmin({active:"dashboard"});
+// Stats réelles Supabase (pas de fausses données)
+import {newsService} from "../js/services/newsService.js";
+import {eventService} from "../js/services/eventService.js";
+import {resultsService} from "../js/services/resultsService.js";
+try{
+  const [news, events, pubs] = await Promise.all([
+    newsService.getAdminNews().catch(()=>[]),
+    eventService.getAdminEvents ? eventService.getAdminEvents().catch(()=>[]) : eventService.list({status:"all"}).catch(()=>[]),
+    resultsService.listPublications ? resultsService.listPublications().catch(()=>[]) : []
+  ]);
+  const pubActive = news.filter(n=>n.status==="published").length;
+  document.getElementById("stat-pub").textContent = String(pubActive).padStart(2,"0");
+  document.getElementById("stat-pub-hint").textContent = pubActive ? `dont ${news.filter(n=>n.expires_at && new Date(n.expires_at) < new Date(Date.now()+7*86400000)).length} expirant bientôt` : "Aucune publication active";
+  const evtUpcoming = events.filter(e=> new Date(e.start||e.event_date||e.date) >= new Date()).length;
+  document.getElementById("stat-evt").textContent = String(evtUpcoming).padStart(2,"0");
+  document.getElementById("stat-evt-hint").textContent = evtUpcoming ? `prochain : ${events[0]?.title||"—"}`.slice(0,24) : "Aucun événement à venir";
+  const resCount = Array.isArray(pubs) ? pubs.length : 0;
+  document.getElementById("stat-res").textContent = String(resCount).padStart(2,"0");
+  document.getElementById("stat-res-hint").textContent = resCount ? `${resCount} publication(s)` : "Aucune publication";
+}catch(e){
+  document.getElementById("stat-pub-hint").textContent = "Erreur chargement";
+  document.getElementById("stat-evt-hint").textContent = "Erreur chargement";
+  document.getElementById("stat-res-hint").textContent = "Erreur chargement";
+}
+</script>
 </body>
 </html>

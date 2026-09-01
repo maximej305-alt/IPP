@@ -11,13 +11,8 @@
   <div class="admin-main">
     <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Journal d'activité</div></div><div style="display:flex;gap:8px;align-items:center"><a class="btn btn--secondary btn--small" href="https://ipp-rho.vercel.app/" target="_blank" rel="noopener">Voir le site</a></div></div>
     <div class="admin-content">
-      <div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Statut</th></tr></thead><tbody>
-        <tr><td>28/08/2026 10:21</td><td>Admin 01</td><td>Publication créée — "Composition du premier trimestre"</td><td><span class="badge badge--active">actif</span></td></tr>
-        <tr><td>28/08/2026 09:45</td><td>Admin 02</td><td>Résultat programmé — Terminale F2, 2ᵉ trimestre</td><td><span class="badge badge--programmed">programmé</span></td></tr>
-        <tr><td>29/08/2026 08:10</td><td>Admin 01</td><td>Document supprimé — Ancien règlement</td><td><span class="badge badge--expired">expiré</span></td></tr>
-        <tr><td>27/08/2026 16:00</td><td>Super Admin</td><td>Galerie mise à jour — Semaine technique (12 photos)</td><td><span class="badge badge--active">actif</span></td></tr>
-      </tbody></table></div>
-      <div class="alert alert--info" style="margin-top:16px">Journal d'activité : la table d'historique existe en base mais est actuellement vide. Cette fonctionnalité sera configurée dans une phase dédiée.</div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Statut</th></tr></thead><tbody><tr><td colspan="4" style="text-align:center;color:var(--ipp-text-muted);padding:24px">Aucune activité enregistrée pour le moment.</td></tr></tbody></table></div>
+      <div class="alert alert--info" style="margin-top:16px">Journal d'activité : enregistrement en base prévu — RLS et trigger à configurer.</div>
     </div>
   </div>
 </div>

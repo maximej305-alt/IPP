@@ -1,19 +1,14 @@
 import { authService } from "../services/authService.js";
+import { requireAdminSession } from "./authGuard.js";
 
 export async function initAdmin({ active, requiredRole }){
-  // P8 — Protection réelle : requireAuth vérifie session Supabase + profile
-  // Masque le layout jusqu'à vérification (évite flash du contenu non autorisé)
-  const layout = document.querySelector(".admin-layout");
-  if(layout) layout.style.visibility = "hidden";
-  let auth;
+  // P1 — Protection centralisée via authGuard (P6.6.4)
+  let profile;
   try{
-    auth = await authService.requireAuth();
+    profile = await requireAdminSession({ requiredRole });
   }catch(e){
-    // requireAuth redirige déjà vers login.html si non connecté
     return;
   }
-  if(layout) layout.style.visibility = "";
-  const profile = auth.profile;
   const nameEl = document.querySelector("[data-admin-name]");
   if(nameEl) nameEl.textContent = profile?.full_name || profile?.role || "Administrateur";
 
@@ -32,21 +27,18 @@ export async function initAdmin({ active, requiredRole }){
     if(have < needVal) el.style.display = "none";
   });
 
-  // Vérif rôle requis pour la page (ex: users.html nécessite super_admin)
-  if(requiredRole){
-    const ok = await authService.hasRole(requiredRole);
-    if(!ok){
-      alert("Accès refusé : rôle insuffisant ("+role+" < "+requiredRole+")");
-      location.href = "dashboard.html";
-      return;
-    }
-  }
-
   const toggle = document.querySelector("[data-admin-toggle]");
   const sidebar = document.querySelector("[data-admin-sidebar]");
   toggle?.addEventListener("click", ()=> sidebar.classList.toggle("is-open"));
   document.querySelector("[data-logout]")?.addEventListener("click", async (e)=>{
     e.preventDefault();
     await authService.logout();
+  });
+
+  // P4 — Fermeture modales via Escape (standard unique)
+  document.addEventListener("keydown", (e)=>{
+    if(e.key==="Escape"){
+      document.querySelectorAll('[id$="-modal"]:not([hidden]), #modal:not([hidden]), #create-modal:not([hidden]), #manage-modal:not([hidden]), #confirm-modal:not([hidden]), #doc-modal:not([hidden]), #pub-modal:not([hidden])').forEach(m=> m.hidden=true);
+    }
   });
 }
