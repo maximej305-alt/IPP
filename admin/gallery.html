@@ -9,7 +9,7 @@
   <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="gallery" href="gallery.html">◎ Galerie</a><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="publications" href="publications.html">◫ Publications</a><a class="admin-nav__link" data-admin-nav="events" href="events.html">▣ Événements</a><a class="admin-nav__link" data-admin-nav="results" href="results.html">✦ Résultats</a><a class="admin-nav__link" data-admin-nav="documents" href="documents.html">⬙ Documents</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a></nav>
   <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
   <div class="admin-main">
-    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Galerie</div></div><button class="btn btn--primary btn--small" data-open-create>Nouvel album</button></div>
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Galerie</div></div><div style="display:flex;gap:8px;align-items:center"><a class="btn btn--secondary btn--small" href="https://ipp-rho.vercel.app/" target="_blank" rel="noopener">Voir le site</a><button class="btn btn--primary btn--small" data-open-create>Nouvel album</button></div></div>
     <div class="admin-content">
       <div class="alert alert--info">Les images sont limitées à 5 Mo (JPEG, PNG, WebP). La galerie est publique.</div>
       <div id="root"></div>
@@ -77,7 +77,7 @@
 <script type="module">
 import {initAdmin} from "../js/admin/adminLayout.js";
 import {galleryService} from "../js/services/galleryService.js";
-initAdmin({active:"gallery"});
+await initAdmin({active:"gallery", requiredRole:"editor"});
 
 const root = document.getElementById("root");
 const createModal = document.getElementById("create-modal");

@@ -13,25 +13,35 @@
     </div>
     <form id="login-form">
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" name="email" type="email" value="admin@ipp.tg" required></div>
-      <div class="form-group"><label class="form-label">Mot de passe</label><input class="form-input" name="password" type="password" value="demo" required><div class="form-hint">Mode mock : tout mot de passe accepté pour l'email listé.</div></div>
+      <div class="form-group"><label class="form-label">Mot de passe</label><input class="form-input" name="password" type="password" value="" required placeholder="••••••••"></div>
       <div id="login-error" hidden class="alert" style="background:var(--ipp-danger-bg);border-color:#fecaca;color:var(--ipp-danger);margin-bottom:12px"></div>
       <button class="btn btn--primary" type="submit" style="width:100%">Se connecter</button>
     </form>
     <div style="margin-top:16px;font-size:12px;color:var(--ipp-text-muted);text-align:center">
-      Comptes mock : admin@ipp.tg · admin01@ipp.tg · editeur@ipp.tg<br><a href="../index.html">← Retour site public</a>
+      Accès sécurisé via Supabase Auth<br><a href="https://ipp-rho.vercel.app/">← Retour site public</a>
     </div>
   </div>
 </div>
 <script type="module">
 import { authService } from "../js/services/authService.js";
+// Si déjà connecté, redirige directement vers dashboard (évite boucle login)
+try{
+  const user = await authService.getCurrentUser();
+  if(user){
+    const profile = await authService.getCurrentProfile();
+    if(profile) location.href = "dashboard.html";
+  }
+}catch(e){}
 document.getElementById("login-form").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const fd = new FormData(e.target);
   const err = document.getElementById("login-error");
+  const btn = e.target.querySelector('button[type="submit"]');
+  err.hidden = true; btn.disabled = true; btn.textContent = "Connexion...";
   try{
     await authService.login(fd.get("email"), fd.get("password"));
     location.href = "dashboard.html";
-  }catch(ex){ err.textContent=ex.message; err.hidden=false; }
+  }catch(ex){ err.textContent=ex.message; err.hidden=false; btn.disabled=false; btn.textContent="Se connecter"; }
 });
 </script>
 </body>

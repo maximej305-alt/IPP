@@ -2,6 +2,9 @@ import { authService } from "../services/authService.js";
 
 export async function initAdmin({ active, requiredRole }){
   // P8 — Protection réelle : requireAuth vérifie session Supabase + profile
+  // Masque le layout jusqu'à vérification (évite flash du contenu non autorisé)
+  const layout = document.querySelector(".admin-layout");
+  if(layout) layout.style.visibility = "hidden";
   let auth;
   try{
     auth = await authService.requireAuth();
@@ -9,6 +12,7 @@ export async function initAdmin({ active, requiredRole }){
     // requireAuth redirige déjà vers login.html si non connecté
     return;
   }
+  if(layout) layout.style.visibility = "";
   const profile = auth.profile;
   const nameEl = document.querySelector("[data-admin-name]");
   if(nameEl) nameEl.textContent = profile?.full_name || profile?.role || "Administrateur";

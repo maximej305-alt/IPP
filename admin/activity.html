@@ -9,7 +9,7 @@
   <nav class="admin-nav"><a class="admin-nav__link" data-admin-nav="activity" href="activity.html">≡ Journal</a><a class="admin-nav__link" data-admin-nav="dashboard" href="dashboard.html">▦ Dashboard</a><a class="admin-nav__link" data-admin-nav="users" href="users.html">◐ Utilisateurs</a></nav>
   <div class="admin-sidebar__footer"><a class="admin-nav__link" href="#" data-logout>↪ Déconnexion</a></div></aside>
   <div class="admin-main">
-    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Journal d'activité</div></div></div>
+    <div class="admin-topbar"><div style="display:flex;gap:12px;align-items:center"><button class="btn btn--secondary btn--small admin-mobile-toggle" data-admin-toggle>☰</button><div class="admin-topbar__title">Journal d'activité</div></div><div style="display:flex;gap:8px;align-items:center"><a class="btn btn--secondary btn--small" href="https://ipp-rho.vercel.app/" target="_blank" rel="noopener">Voir le site</a></div></div>
     <div class="admin-content">
       <div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Statut</th></tr></thead><tbody>
         <tr><td>28/08/2026 10:21</td><td>Admin 01</td><td>Publication créée — "Composition du premier trimestre"</td><td><span class="badge badge--active">actif</span></td></tr>
@@ -21,6 +21,6 @@
     </div>
   </div>
 </div>
-<script type="module">import {initAdmin} from "../js/admin/adminLayout.js"; initAdmin({active:"activity"});</script>
+<script type="module">import {initAdmin} from "../js/admin/adminLayout.js"; await initAdmin({active:"activity", requiredRole:"admin"});</script>
 </body>
 </html>
