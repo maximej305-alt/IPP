@@ -40,7 +40,7 @@
 </div>
 
 <!-- ============ MODAL CRÉATION ============ -->
-<div id="create-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.4);display:grid;place-items:center;padding:16px;z-index:60">
+<div id="create-modal" hidden role="dialog" aria-modal="true" style="position:fixed;inset:0;background:rgba(15,42,68,0.4);backdrop-filter:blur(1px);display:grid;place-items:center;padding:16px;z-index:60">
   <div class="card" style="width:100%;max-width:520px"><div class="card__body">
     <h3>Nouvelle publication de résultats</h3>
     <div id="create-error" hidden class="alert" style="background:#fee2e2;border-color:#fecaca;color:#991b1b;margin:10px 0"></div>
@@ -66,7 +66,7 @@
 </div>
 
 <!-- ============ MODAL GESTION ============ -->
-<div id="manage-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.5);display:grid;place-items:center;padding:16px;z-index:70;overflow:auto">
+<div id="manage-modal" hidden role="dialog" aria-modal="true" style="position:fixed;inset:0;background:rgba(15,42,68,0.35);backdrop-filter:blur(1px);display:grid;place-items:center;padding:16px;z-index:70;overflow:auto">
   <div class="card" style="width:100%;max-width:880px;max-height:92vh;overflow:auto"><div class="card__body">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
       <div>
@@ -123,10 +123,10 @@
 </div>
 
 <!-- ============ DIALOGUE DE CONFIRMATION DESTRUCTIVE ============ -->
-<div id="confirm-modal" hidden style="position:fixed;inset:0;background:rgba(15,42,68,0.5);display:grid;place-items:center;padding:16px;z-index:90">
-  <div class="card" style="width:100%;max-width:460px"><div class="card__body">
+<div id="confirm-modal" hidden role="dialog" aria-modal="true" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);display:grid;place-items:center;padding:16px;z-index:90">
+  <div class="card" style="width:100%;max-width:460px;box-shadow:0 20px 40px rgba(0,0,0,0.2)"><div class="card__body">
     <h3 style="margin:0" id="cf-title">Confirmer la suppression</h3>
-    <div class="alert" style="background:#fef2f2;border-color:#fecaca;color:#991b1b;margin:14px 0" id="cf-body"></div>
+    <div style="margin:14px 0" id="cf-body"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn--secondary btn--small" id="cf-cancel">Annuler</button>
       <button class="btn btn--danger btn--small" id="cf-ok">Supprimer définitivement</button>
