@@ -42,9 +42,14 @@ document.getElementById("login-form").addEventListener("submit", async (e)=>{
   err.hidden = true; err.textContent=""; btn.disabled = true; btn.textContent = "Connexion...";
   console.log("login attempt", fd.get("email"));
   try{
-    await authService.login(fd.get("email"), fd.get("password"));
-    // Laisse Supabase persister session (localStorage sb-...) avant redirect
-    await new Promise(r=>setTimeout(r, 150));
+    const res = await authService.login(fd.get("email"), fd.get("password"));
+    console.log("login success", res.profile?.role);
+    // Attend que Supabase ait persisté session (localStorage) et que getUser soit lisible
+    for(let i=0;i<5;i++){
+      const u = await authService.getCurrentUser().catch(()=>null);
+      if(u) break;
+      await new Promise(r=>setTimeout(r, 200));
+    }
     location.href = "dashboard.html";
   }catch(ex){
     console.error("login failed", ex);
