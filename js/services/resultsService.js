@@ -161,8 +161,9 @@ export const resultsService = {
     if(useMock()){ const row={ id:"p"+Date.now(), level_name:lvl, class_name:cls, session:sess, school_year:yr, status, publish_at, expires_at, created_at:new Date().toISOString() }; return mapPublication(row); }
 
     const supabase = await getSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error } = await supabase.from("result_publications").insert({
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    const { data: inserted, error } = await supabase.from("result_publications").insert({
       level_name: lvl,
       class_name: cls,
       session: sess,
@@ -173,7 +174,7 @@ export const resultsService = {
       created_by: user?.id || null
     }).select("id, level_name, class_name, session, school_year, status, publish_at, published_at, expires_at, created_at, updated_at").single();
     if(error) throw error;
-    return mapPublication(data);
+    return mapPublication(inserted);
   },
 
   async updatePublication(id, patch){

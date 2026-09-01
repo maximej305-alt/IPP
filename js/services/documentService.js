@@ -114,14 +114,15 @@ export const documentService = {
       return mapRow(row);
     }
     const supabase = await getSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error } = await supabase.from("documents").insert({ ...payload, created_by: user?.id || null }).select().single();
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    const { data: inserted, error } = await supabase.from("documents").insert({ ...payload, created_by: user?.id || null }).select().single();
     if(error){
       // Rollback storage si DB échoue
       if(upload) await supabase.storage.from("documents").remove([upload.path]).catch((err)=>{ if(err) console.warn("Storage remove error:", err.message); });
       throw error;
     }
-    return mapRow(data);
+    return mapRow(inserted);
   },
 
   async updateDocument(id, patch){

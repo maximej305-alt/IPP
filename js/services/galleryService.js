@@ -116,11 +116,12 @@ async function createAlbum({ title, description, event_date }){
   if(event_date) payload.event_date = event_date;
   if(useMock()) return { success: true, album: { id: "a"+Date.now(), title: t }, mock: true };
   const supabase = await getSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
   payload.created_by = user?.id || null;
-  const { data, error } = await supabase.from("gallery_albums").insert(payload).select().single();
+  const { data: inserted, error } = await supabase.from("gallery_albums").insert(payload).select().single();
   if(error) return { success: false, error: { code: error.code || "DB_ERROR", message: error.message } };
-  return { success: true, album: mapAlbum(data) };
+  return { success: true, album: mapAlbum(inserted) };
 }
 
 async function updateAlbum(id, patch){

@@ -102,13 +102,14 @@ export const newsService = {
       return mapRow(row);
     }
     const supabase = await getSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error } = await supabase.from("news").insert({
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    const { data: inserted, error } = await supabase.from("news").insert({
       title, excerpt, content, status, published_at, expires_at,
       created_by: user?.id || null
     }).select().single();
     if(error) throw error;
-    return mapRow(data);
+    return mapRow(inserted);
   },
 
   // Alias legacy

@@ -128,13 +128,14 @@ export const eventService = {
       return ev;
     }
     const supabase = await getSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error } = await supabase.from("events").insert({
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    const { data: inserted, error } = await supabase.from("events").insert({
       ...payload,
       created_by: user?.id || null
     }).select().single();
     if(error) throw error;
-    return mapRow(data);
+    return mapRow(inserted);
   },
 
   // Alias legacy
