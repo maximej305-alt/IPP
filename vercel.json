@@ -1,0 +1,25 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/css/:path*", "destination": "/css/:path*" },
+    { "source": "/js/:path*", "destination": "/js/:path*" },
+    { "source": "/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/supabase/:path*", "destination": "/supabase/:path*" },
+    { "source": "/admin/:path*", "destination": "/admin/:path*" },
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/index.html", "destination": "/public/index.html" },
+    { "source": "/about.html", "destination": "/public/about.html" },
+    { "source": "/news.html", "destination": "/public/news.html" },
+    { "source": "/events.html", "destination": "/public/events.html" },
+    { "source": "/results.html", "destination": "/public/results.html" },
+    { "source": "/documents.html", "destination": "/public/documents.html" },
+    { "source": "/gallery.html", "destination": "/public/gallery.html" },
+    { "source": "/contact.html", "destination": "/public/contact.html" }
+  ],
+  "headers": [
+    {
+      "source": "/css/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ]
+}

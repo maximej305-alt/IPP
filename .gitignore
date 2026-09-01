@@ -10,3 +10,5 @@ Thumbs.db
 
 # Deps
 node_modules/
+.vercel
+.env*

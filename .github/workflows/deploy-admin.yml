@@ -1,0 +1,57 @@
+name: Deploy Admin to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "admin/**"
+      - "css/**"
+      - "js/**"
+      - "assets/**"
+      - ".github/workflows/deploy-admin.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare deploy folder
+        run: |
+          rm -rf deploy
+          mkdir -p deploy/css deploy/js deploy/assets
+          cp -r css/* deploy/css/
+          cp -r js deploy/js
+          # copy assets if exists
+          if [ -d "assets" ]; then cp -r assets/* deploy/assets/ 2>/dev/null || true; fi
+          # copy admin files to root of deploy (so /admin/dashboard.html becomes /dashboard.html on gh-pages)
+          cp -r admin/* deploy/
+          # Patch admin HTML: add <base href="/IPP/"> and fix css/js paths for subpath deployment
+          # Original links are ../css/ and ../js/ -> need to become css/ and js/ with base href
+          cd deploy
+          for f in *.html; do
+            # Add base href after <head> if not present and fix links
+            sed -i 's|<head>|<head><base href="/IPP/">|' "$f"
+            sed -i 's|href="../css/|href="css/|g' "$f"
+            sed -i 's|href="../js/|href="js/|g' "$f"
+            sed -i 's|href="../assets/|href="assets/|g' "$f"
+            sed -i 's|src="../js/|src="js/|g' "$f"
+            sed -i 's|from "../js/|from "js/|g' "$f"
+            sed -i 's|from '\''../js/|from '\''js/|g' "$f"
+            sed -i 's|href="../index.html|href="/IPP/"|g' "$f"
+            sed -i 's|href="../public/|href="/IPP/public/|g' "$f"
+          done
+          ls -R | head -n 100
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./deploy
+          force_orphan: true
+          commit_message: "deploy admin to gh-pages"
